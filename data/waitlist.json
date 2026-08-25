@@ -1,0 +1,20 @@
+{
+  "users": [
+    {
+      "id": "usr_1787681188893_zebpp",
+      "email": "0241cse393@niet.co.in",
+      "spot": 101,
+      "registeredAt": "2026-08-25T18:06:28.893Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
+    },
+    {
+      "id": "usr_1787681198706_9lomg",
+      "email": "shreyajha2430@gmail.com",
+      "spot": 102,
+      "registeredAt": "2026-08-25T18:06:38.706Z",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
+    }
+  ],
+  "totalCount": 2,
+  "lastUpdated": "2026-08-25T18:06:38.706Z"
+}
