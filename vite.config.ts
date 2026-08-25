@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 function waitlistApiPlugin(): Plugin {
-  const dataFilePath = path.resolve(__dirname, 'data/waitlist.json');
+  const dataFilePath = path.resolve(process.cwd(), 'data/waitlist.json');
 
   // Ensure data directory and file exist
   const ensureDataFile = () => {
