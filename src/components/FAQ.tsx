@@ -3,8 +3,8 @@ import { ChevronDown, HelpCircle } from 'lucide-react';
 import { mockFAQs } from '../data/mockData';
 
 export const FAQ: React.FC = () => {
-  // Only one open item at a time (as required)
-  const [openId, setOpenId] = useState<string | null>('faq-1');
+  // Start collapsed; visitors can open the answer they need.
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const toggleItem = (id: string) => {
     setOpenId((prev) => (prev === id ? null : id));

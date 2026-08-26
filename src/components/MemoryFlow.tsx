@@ -1,140 +1,183 @@
 import React, { useState } from 'react';
-import { Compass, BookmarkCheck, Cpu, GitMerge, BrainCircuit, ArrowRight, Sparkles, Check } from 'lucide-react';
+import { Video, FileText, Share2, Sparkles, ArrowRight, CheckCircle2, Compass, Layers, GitMerge, RotateCcw } from 'lucide-react';
 
-interface StageData {
-  id: string;
-  stepName: string;
+interface JourneyStep {
+  id: number;
+  stepNumber: string;
+  badge: string;
   title: string;
   subtitle: string;
-  color: string;
-  icon: React.ReactNode;
-  cards: {
-    title: string;
-    source: string;
-    connectionHint?: string;
-    state: string;
-  }[];
+  visualState: {
+    cards: {
+      type: 'video' | 'article' | 'reddit' | 'reel';
+      title: string;
+      source: string;
+      date: string;
+      isDimmed?: boolean;
+      highlightConcepts?: string[];
+      badgeText?: string;
+    }[];
+    activeConcepts: {
+      name: string;
+      color: string;
+      status: string;
+    }[];
+    connectionMessage?: string;
+  };
   explanation: string;
 }
 
 export const MemoryFlow: React.FC = () => {
-  const [activeStage, setActiveStage] = useState<number>(3); // Default to 'CONNECT' to showcase relationships
+  const [currentStep, setCurrentStep] = useState<number>(0);
 
-  const stages: StageData[] = [
+  const steps: JourneyStep[] = [
     {
-      id: 'discover',
-      stepName: 'DISCOVER',
-      title: 'Encounter ideas across the wild internet',
-      subtitle: 'You stumble upon high-signal insights while reading, watching, or exploring.',
-      color: '#06b6d4',
-      icon: <Compass className="w-4 h-4 text-cyan-400" />,
-      explanation: 'Unstructured content across disparate domains: blog posts, research papers, GitHub repos, and fleeting thoughts.',
-      cards: [
-        { title: 'That article about agents', source: 'arXiv paper on autonomous loops', state: 'Raw page' },
-        { title: 'How vector databases work', source: 'Latent Space deep dive', state: 'Podcast clip' },
-        { title: 'Someone mentioned RAG', source: 'Engineering blog post', state: 'Highlighted text' },
-        { title: 'Startup idea from yesterday', source: 'Quick scratchpad note', state: 'Voice snippet' }
-      ]
+      id: 0,
+      stepNumber: '01',
+      badge: 'DISCOVERY',
+      title: 'You find something interesting.',
+      subtitle: 'You are browsing YouTube and find an explanation of Redis.',
+      explanation: 'You don\'t need to take manual notes, create new folders, or organize tags. You just enjoy watching the content.',
+      visualState: {
+        cards: [
+          {
+            type: 'video',
+            title: 'Redis in 10 Minutes',
+            source: 'YouTube • 47m video',
+            date: 'Aug 3',
+            badgeText: 'New Discovery ⚡'
+          }
+        ],
+        activeConcepts: []
+      }
     },
     {
-      id: 'save',
-      stepName: 'SAVE',
-      title: 'Capture instantly with zero taxonomic friction',
-      subtitle: 'No manual folders. No tedious tagging. One keystroke or ambient capture.',
-      color: '#3b82f6',
-      icon: <BookmarkCheck className="w-4 h-4 text-blue-400" />,
-      explanation: 'MemShift preserves original context, timestamp, reading session headspace, and key quote excerpts.',
-      cards: [
-        { title: 'That article about agents', source: 'Captured with 1-click shortcut', state: 'Ingested ⚡' },
-        { title: 'How vector databases work', source: 'Audio timestamp 24:18 bookmarked', state: 'Ingested ⚡' },
-        { title: 'Someone mentioned RAG', source: 'Captured during late night session', state: 'Ingested ⚡' },
-        { title: 'Startup idea from yesterday', source: 'Ambient note synced via mobile', state: 'Ingested ⚡' }
-      ]
+      id: 1,
+      stepNumber: '02',
+      badge: 'LIFE CONTINUES',
+      title: 'You move on with your day.',
+      subtitle: 'You read an article, watch a reel, and check a Reddit thread.',
+      explanation: 'Normally, content you saw earlier gets pushed down your browser history and forgotten. With MemShift, the useful ideas stay easy to find.',
+      visualState: {
+        cards: [
+          {
+            type: 'video',
+            title: 'Redis in 10 Minutes',
+            source: 'YouTube',
+            date: 'Aug 3',
+            isDimmed: true,
+            badgeText: 'Saved in background'
+          },
+          {
+            type: 'article',
+            title: 'Async Python Basics',
+            source: 'Medium • 5m read',
+            date: 'Aug 5',
+            badgeText: 'New tab'
+          },
+          {
+            type: 'reddit',
+            title: 'r/webdev: Best DB for 2026',
+            source: 'Reddit • Discussion',
+            date: 'Aug 6',
+            badgeText: 'Saved link'
+          }
+        ],
+        activeConcepts: []
+      }
     },
     {
-      id: 'memshift',
-      stepName: 'MEMSHIFT',
-      title: 'Context extraction & latent embedding',
-      subtitle: 'MemShift distills the core insight and maps it into high-dimensional semantic space.',
-      color: '#8b5cf6',
-      icon: <Cpu className="w-4 h-4 text-purple-400" />,
-      explanation: 'Our local semantic model extracts entities, implicit concepts, and semantic embeddings on-device.',
-      cards: [
-        { title: 'That article about agents', source: 'Concepts: Long-term memory, multi-agent state', state: 'Embedded 🧠' },
-        { title: 'How vector databases work', source: 'Concepts: High-dimensional indexing, HNSW, cosine', state: 'Embedded 🧠' },
-        { title: 'Someone mentioned RAG', source: 'Concepts: Context injection, parent-child chunking', state: 'Embedded 🧠' },
-        { title: 'Startup idea from yesterday', source: 'Concepts: Frictionless capture, cognitive tooling', state: 'Embedded 🧠' }
-      ]
+      id: 2,
+      stepNumber: '03',
+      badge: 'UNDERSTANDING',
+      title: 'MemShift remembers what mattered.',
+      subtitle: 'Concepts naturally emerge from the content you consumed.',
+      explanation: 'MemShift figures out the topic and the key takeaways without asking you to organize anything.',
+      visualState: {
+        cards: [
+          {
+            type: 'video',
+            title: 'Redis in 10 Minutes',
+            source: 'YouTube',
+            date: 'Aug 3',
+            badgeText: 'Analyzed'
+          }
+        ],
+        activeConcepts: [
+          { name: 'Redis', color: '#06b6d4', status: 'Core Topic' },
+          { name: 'Caching', color: '#10b981', status: 'Key Idea' },
+          { name: 'Performance', color: '#f59e0b', status: 'Key Idea' }
+        ],
+        connectionMessage: 'MemShift extracted 3 central concepts from this video.'
+      }
     },
     {
-      id: 'connect',
-      stepName: 'CONNECT',
-      title: 'Autonomous relationship synthesis',
-      subtitle: 'MemShift discovers implicit relationships between items saved weeks apart.',
-      color: '#10b981',
-      icon: <GitMerge className="w-4 h-4 text-emerald-400" />,
-      explanation: 'Identifies non-obvious bridges: how the agent paper directly solves the RAG retrieval challenge from your startup note.',
-      cards: [
-        {
-          title: 'That article about agents',
-          source: 'Related: RAG architecture & Vector DB',
-          connectionHint: '→ Powers episodic memory for tool-calling agents',
-          state: 'Synapse Connected ✨'
-        },
-        {
-          title: 'How vector databases work',
-          source: 'Related: Local Wasm engines & Agent memory',
-          connectionHint: '→ Acts as associative store for the agent loops',
-          state: 'Synapse Connected ✨'
-        },
-        {
-          title: 'Someone mentioned RAG',
-          source: 'Related: Hierarchical indexing strategies',
-          connectionHint: '→ Grounds agent decisions with verified knowledge',
-          state: 'Synapse Connected ✨'
-        },
-        {
-          title: 'Startup idea from yesterday',
-          source: 'Related: Memory tooling & Human cognition',
-          connectionHint: '→ Unifies all three pieces into a viable thesis',
-          state: 'Synapse Connected ✨'
-        }
-      ]
+      id: 3,
+      stepNumber: '04',
+      badge: 'NEW ENCOUNTER',
+      title: 'Then you see something related.',
+      subtitle: 'Days later, you read an article: "How Caching Improves Performance".',
+      explanation: 'MemShift immediately recognizes that "Caching" connects this new article directly to the Redis video from last week.',
+      visualState: {
+        cards: [
+          {
+            type: 'video',
+            title: 'Redis in 10 Minutes',
+            source: 'YouTube',
+            date: 'Aug 3',
+            badgeText: 'Past Memory'
+          },
+          {
+            type: 'article',
+            title: 'How Caching Improves Performance',
+            source: 'Dev Article',
+            date: 'Aug 8',
+            badgeText: 'New Article ⚡'
+          }
+        ],
+        activeConcepts: [
+          { name: 'Caching', color: '#10b981', status: 'Shared Bridge ✨' },
+          { name: 'Databases', color: '#8b5cf6', status: 'New Idea' }
+        ],
+        connectionMessage: 'MemShift noticed: "You\'ve seen the idea of Caching before in your Redis video."'
+      }
     },
     {
-      id: 'remember',
-      stepName: 'REMEMBER',
-      title: 'Instant recall by natural thought association',
-      subtitle: 'Ask in plain human language. Surface the exact memory cluster instantly.',
-      color: '#f59e0b',
-      icon: <BrainCircuit className="w-4 h-4 text-amber-400" />,
-      explanation: 'You never have to remember exact filenames or folder paths. Query by fuzzy concept, feeling, or temporal proximity.',
-      cards: [
-        {
-          title: '"What was that agent architecture paper?"',
-          source: 'Returned in 14ms with all 3 related concepts & original quote',
-          state: 'Recalled 🎯'
-        },
-        {
-          title: '"Where did I read about vector DBs?"',
-          source: 'Returned Latent Space podcast snippet with linked RAG docs',
-          state: 'Recalled 🎯'
-        },
-        {
-          title: '"My thoughts on internet memory"',
-          source: 'Returned startup note with synthesized cross-references',
-          state: 'Recalled 🎯'
-        },
-        {
-          title: 'Total context reconstructed',
-          source: 'Everything you needed is instantly in your active mental buffer',
-          state: 'Recalled 🎯'
-        }
-      ]
+      id: 4,
+      stepNumber: '05',
+      badge: 'COMPLETE MEMORY',
+      title: 'Now MemShift understands the connection.',
+      subtitle: 'Your memories form a living web: Redis ↔ Caching ↔ Performance.',
+      explanation: 'You now have an interconnected memory map. Whenever you search for any of these ideas, you get the entire context.',
+      visualState: {
+        cards: [
+          {
+            type: 'video',
+            title: 'Redis in 10 Minutes',
+            source: 'YouTube (Aug 3)',
+            date: 'Aug 3',
+            badgeText: 'Connected'
+          },
+          {
+            type: 'article',
+            title: 'How Caching Improves Performance',
+            source: 'Dev Article (Aug 8)',
+            date: 'Aug 8',
+            badgeText: 'Connected'
+          }
+        ],
+        activeConcepts: [
+          { name: 'Redis', color: '#06b6d4', status: 'Source 1' },
+          { name: 'Caching', color: '#10b981', status: 'Central Link' },
+          { name: 'Performance', color: '#f59e0b', status: 'Source 1 & 2' },
+          { name: 'Databases', color: '#8b5cf6', status: 'Source 2' }
+        ],
+        connectionMessage: 'The full connection is clear: Redis ↔ Caching ↔ Performance ↔ Databases.'
+      }
     }
   ];
 
-  const current = stages[activeStage];
+  const active = steps[currentStep];
 
   return (
     <section id="how-it-works" className="relative py-24 sm:py-32 overflow-hidden">
@@ -142,125 +185,172 @@ export const MemoryFlow: React.FC = () => {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-mono uppercase tracking-widest text-slate-600 dark:text-slate-400 mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400" />
-            <span>THE LIFECYCLE OF A MEMORY</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-xs font-mono uppercase tracking-widest mb-4">
+            <Compass className="w-3.5 h-3.5" />
+            <span>HOW MEMSHIFT WORKS // STEP BY STEP</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
-            From scattered tabs to connected thoughts.
+
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+            How something you saw becomes <br className="hidden sm:inline" />
+            <span className="text-cyan-600 dark:text-cyan-400">something you can find again.</span>
           </h2>
+
           <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Traditional tools store dead URLs. MemShift is a living synthesis engine that continuously learns how your discoveries relate.
+            Experience what happens in MemShift as you browse, read, and learn over days and weeks.
           </p>
         </div>
 
-        {/* Five Stage Step Indicator Pipeline */}
-        <div className="mb-12">
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 p-2 rounded-2xl bg-slate-100/90 dark:bg-[#0c0e17] border border-slate-200/80 dark:border-white/10 backdrop-blur-md shadow-sm">
-            {stages.map((stage, idx) => {
-              const isSelected = activeStage === idx;
+        {/* 5-Step Progress Tracker */}
+        <div className="mb-10">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-2 rounded-2xl bg-slate-100 dark:bg-[#0d101d] border border-slate-200 dark:border-white/10 backdrop-blur-md">
+            {steps.map((step, idx) => {
+              const isSelected = currentStep === idx;
               return (
                 <button
-                  key={stage.id}
-                  onClick={() => setActiveStage(idx)}
-                  className={`relative flex items-center justify-center sm:justify-start gap-2.5 p-3 rounded-xl font-mono text-xs transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                  key={step.id}
+                  onClick={() => setCurrentStep(idx)}
+                  className={`p-3 rounded-xl text-left transition-all font-mono focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                     isSelected
-                      ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white border border-cyan-400/50 shadow-md'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/5 border border-transparent'
+                      ? 'bg-white dark:bg-[#14192b] text-slate-900 dark:text-white border border-cyan-500/50 shadow-md ring-1 ring-cyan-500/30'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-white/5'
                   }`}
                 >
-                  <div className="p-1 rounded-md bg-slate-100 dark:bg-white/5">
-                    {stage.icon}
+                  <div className="flex items-center justify-between mb-1 text-[10px]">
+                    <span className="font-bold text-cyan-600 dark:text-cyan-400">{step.stepNumber}</span>
+                    <span className="uppercase text-slate-400">{step.badge}</span>
                   </div>
-                  <div className="flex flex-col text-left">
-                    <span className="font-bold tracking-wider">{stage.stepName}</span>
-                    <span className="text-[10px] text-slate-400 hidden sm:inline">0{idx + 1}</span>
+                  <div className="text-xs font-semibold truncate">
+                    {step.title}
                   </div>
-                  {isSelected && (
-                    <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-4 h-1 rounded-full bg-cyan-400 hidden sm:block" />
-                  )}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Dynamic Interactive Stage Viewer */}
-        <div className="p-6 sm:p-10 rounded-2xl bg-slate-950 dark:bg-[#0c0e17] border border-slate-200/40 dark:border-white/10 backdrop-blur-xl shadow-2xl relative overflow-hidden text-white">
+        {/* Dynamic Interactive Stage Simulation Box */}
+        <div className="p-6 sm:p-10 rounded-3xl bg-slate-950 dark:bg-[#0b0e18] border-2 border-slate-800 dark:border-white/10 backdrop-blur-xl shadow-2xl relative overflow-hidden text-white min-h-[440px] flex flex-col justify-between">
           
           {/* Ambient Glow */}
-          <div
-            className="absolute -top-24 -right-24 w-80 h-80 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors duration-500"
-            style={{ backgroundColor: current.color }}
-          />
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Stage Descriptor */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 border-b border-slate-800 dark:border-white/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
             <div>
               <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-cyan-400 mb-1">
-                <span>STAGE 0{activeStage + 1} // {current.stepName}</span>
+                <span>STEP {active.stepNumber} OF 05 // {active.badge}</span>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold text-white">
-                {current.title}
+                {active.title}
               </h3>
               <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
-                {current.subtitle}
+                {active.subtitle}
               </p>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-mono text-slate-400">Next Stage:</span>
               <button
-                onClick={() => setActiveStage((prev) => (prev + 1) % stages.length)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-medium transition-all"
+                onClick={() => setCurrentStep((prev) => (prev + 1) % steps.length)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]"
               >
-                <span>{stages[(activeStage + 1) % stages.length].stepName}</span>
-                <ArrowRight className="w-3 h-3" />
+                <span>{currentStep === 4 ? 'Start from beginning ↺' : 'See next step →'}</span>
               </button>
             </div>
           </div>
 
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-            {current.cards.map((card, i) => (
-              <div
-                key={i}
-                className="group p-5 rounded-xl bg-slate-900/90 dark:bg-[#121524]/80 border border-slate-800 dark:border-white/10 hover:border-cyan-500/40 transition-all duration-300 relative overflow-hidden shadow-sm"
-              >
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wide">
-                    Discovery #{i + 1}
-                  </span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-cyan-300 flex items-center gap-1">
-                    <Check className="w-3 h-3 text-cyan-400" />
-                    {card.state}
-                  </span>
+          {/* Center Visual Canvas for Current Step */}
+          <div className="py-8 my-auto">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              
+              {/* Content Cards Column */}
+              <div className="md:col-span-6 space-y-3">
+                <div className="text-[11px] font-mono text-slate-400 mb-2">
+                  CONTENT IN YOUR BROWSING STREAM:
+                </div>
+                {active.visualState.cards.map((card, i) => (
+                  <div
+                    key={i}
+                    className={`p-4 rounded-2xl border transition-all duration-300 ${
+                      card.isDimmed
+                        ? 'bg-white/5 border-white/5 opacity-50'
+                        : 'bg-slate-900/90 border-cyan-500/30 shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
+                      <span className="text-cyan-400 uppercase flex items-center gap-1">
+                        {card.type === 'video' ? <Video className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+                        {card.source}
+                      </span>
+                      {card.badgeText && (
+                        <span className="px-2 py-0.5 rounded bg-white/10 text-slate-200">
+                          {card.badgeText}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm font-semibold text-white">
+                      "{card.title}"
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Emergent Concepts / Connections Column */}
+              <div className="md:col-span-6 space-y-4">
+                <div className="text-[11px] font-mono text-cyan-400 mb-2">
+                  WHAT MEMSHIFT UNDERSTANDS:
                 </div>
 
-                <h4 className="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors mb-1">
-                  "{card.title}"
-                </h4>
+                {active.visualState.activeConcepts.length > 0 ? (
+                  <div className="p-5 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      {active.visualState.activeConcepts.map((concept, idx) => (
+                        <div
+                          key={idx}
+                          className="px-3 py-1.5 rounded-xl border font-mono text-xs flex items-center gap-1.5 shadow-sm"
+                          style={{
+                            borderColor: concept.color,
+                            backgroundColor: `${concept.color}15`,
+                            color: concept.color
+                          }}
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: concept.color }}
+                          />
+                          <span className="font-bold">{concept.name}</span>
+                          <span className="text-[9px] opacity-75">({concept.status})</span>
+                        </div>
+                      ))}
+                    </div>
 
-                <p className="text-xs text-slate-400">
-                  {card.source}
-                </p>
-
-                {card.connectionHint && (
-                  <div className="mt-3 pt-3 border-t border-white/5 text-[11px] font-mono text-emerald-400 bg-emerald-500/5 -mx-5 -mb-5 p-3 rounded-b-xl">
-                    {card.connectionHint}
+                    {active.visualState.connectionMessage && (
+                      <p className="text-xs text-slate-300 pt-2 border-t border-cyan-500/20 font-mono">
+                        💡 {active.visualState.connectionMessage}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-2xl bg-white/5 border border-white/5 text-center text-xs font-mono text-slate-400">
+                    Watching content... MemShift prepares to extract key ideas without interrupting you.
                   </div>
                 )}
+
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300">
+                  <strong className="text-white block mb-1">Plain English Rule:</strong>
+                  {active.explanation}
+                </div>
               </div>
-            ))}
+
+            </div>
           </div>
 
-          {/* Stage Deep-dive Bar */}
-          <div className="mt-8 pt-6 border-t border-slate-800 dark:border-white/10 flex items-center justify-between text-xs text-slate-400 font-mono">
+          {/* Bottom Step Indicator Bar */}
+          <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-slate-400 font-mono">
             <span className="flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>MemShift associative reasoning engine</span>
+              <span>MemShift continuous synthesis</span>
             </span>
-            <span className="text-cyan-400">Zero manual organization required</span>
+            <span className="text-cyan-400">No manual tagging required</span>
           </div>
 
         </div>

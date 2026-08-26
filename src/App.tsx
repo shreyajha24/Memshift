@@ -4,8 +4,14 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ProblemSection } from './components/ProblemSection';
 import { MemoryFlow } from './components/MemoryFlow';
+import { SarahStory } from './components/SarahStory';
+import { HowItWorksSimple } from './components/HowItWorksSimple';
 import { SearchDemo } from './components/SearchDemo';
 import { Connections } from './components/Connections';
+import { KnowledgeTimeline } from './components/KnowledgeTimeline';
+import { OriginFinder } from './components/OriginFinder';
+import { MemoryDecay } from './components/MemoryDecay';
+import { PrivacySection } from './components/PrivacySection';
 import { Comparison } from './components/Comparison';
 import { FAQ } from './components/FAQ';
 import { Waitlist } from './components/Waitlist';
@@ -49,31 +55,49 @@ export function App() {
         <Navbar onOpenSearch={() => setCommandPaletteOpen(true)} />
 
         <main>
-          {/* Section 1: Hero & Interactive Memory Visualizer */}
+          {/* Section 1: Hero & Interactive 3D Memory World */}
           <Hero
             onJoinWaitlist={scrollToWaitlist}
             onExplore={scrollToExplore}
           />
 
-          {/* Section 2: "The Internet Has a Memory Problem" */}
+          {/* Section 2: "You don't forget the idea. You forget where you found it." */}
           <ProblemSection />
 
-          {/* Section 3: The Core Experience User Journey (Discover -> Save -> MemShift -> Connect -> Remember) */}
+          {/* Section 3: The 5-Step Story Journey (Encounter -> Move on -> Understand -> See related -> Connect) */}
           <MemoryFlow />
 
-          {/* Section 4: Mock Interactive Search / Recall Interface */}
+          {/* Section 4: Real-World Example — Sarah's Learning Story (Monday -> Wednesday -> Friday) */}
+          <SarahStory />
+
+          {/* Section 5: How It Works in 4 Simple Steps (01 Watch & Read -> 02 Remember -> 03 Connect -> 04 Find) */}
+          <HowItWorksSimple />
+
+          {/* Section 6: Interactive Recall Demo ("What do you remember?") */}
           <SearchDemo />
 
-          {/* Section 5: Interactive Connections Network Graph */}
+          {/* Section 7: Interactive Memory Map ("See how the things you learn connect") */}
           <Connections />
 
-          {/* Section 6: Why MemShift Comparison */}
+          {/* Section 8: Knowledge Timeline ("Your knowledge has a history") */}
+          <KnowledgeTimeline />
+
+          {/* Section 9: Origin & Provenance Finder ("Remember the idea. Find the source.") */}
+          <OriginFinder />
+
+          {/* Section 10: Memory Fade & Human Control ("Some things fade. You choose what stays.") */}
+          <MemoryDecay />
+
+          {/* Section 11: Privacy & Trust ("You decide what MemShift remembers.") */}
+          <PrivacySection />
+
+          {/* Section 12: Bookmarks vs MemShift Comparison */}
           <Comparison />
 
-          {/* Section 7: FAQ Accordion */}
+          {/* Section 13: FAQ Accordion */}
           <FAQ />
 
-          {/* Section 8: Waitlist CTA */}
+          {/* Section 14: Real Waitlist CTA with live queue and spot pass */}
           <Waitlist />
         </main>
 

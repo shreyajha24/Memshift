@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { mockConnectionNodes } from '../data/mockData';
-import { Sparkles, Network, ArrowRight, Share2, Layers } from 'lucide-react';
+import { Sparkles, Network, ArrowRight, Share2, Layers, CheckCircle2 } from 'lucide-react';
 import { ConnectionNode } from '../types';
 
 export const Connections: React.FC = () => {
-  const [selectedNodeId, setSelectedNodeId] = useState<string>('node-agents');
+  const [selectedNodeId, setSelectedNodeId] = useState<string>('node-redis');
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
   const activeId = hoveredNodeId || selectedNodeId;
@@ -22,13 +22,15 @@ export const Connections: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-xs font-mono uppercase tracking-widest mb-4">
             <Network className="w-3.5 h-3.5" />
-            <span>ASSOCIATIVE GRAPH ENGINE</span>
+            <span>INTERACTIVE MEMORY MAP</span>
           </div>
+
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Information isn't linear. Your memory shouldn't be either.
+            See how the things you learn connect.
           </h2>
+
           <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            MemShift builds a dynamic neural graph of your discoveries. Click or hover any node below to inspect how concepts bridge across time.
+            Click an idea to see the things you encountered around it. MemShift makes those relationships easy to follow.
           </p>
         </div>
 
@@ -37,16 +39,16 @@ export const Connections: React.FC = () => {
           
           {/* Left: SVG + Interactive Constellation Canvas */}
           <div className="lg:col-span-7">
-            <div className="relative w-full h-[400px] sm:h-[460px] rounded-2xl bg-slate-950 dark:bg-[#0b0d17] border border-slate-200/40 dark:border-white/10 p-6 overflow-hidden backdrop-blur-xl shadow-2xl">
+            <div className="relative w-full h-[400px] sm:h-[480px] rounded-3xl bg-slate-950 dark:bg-[#0b0d17] border-2 border-slate-200/40 dark:border-white/10 p-6 overflow-hidden backdrop-blur-xl shadow-2xl">
               
-              {/* Top Graph HUD */}
-              <div className="absolute top-4 left-4 z-20 flex items-center gap-2 text-[11px] font-mono text-slate-400">
+              {/* Map status */}
+              <div className="absolute top-4 left-4 z-20 flex items-center gap-2 text-xs font-mono text-slate-400">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                <span>INTERACTIVE MEMORY MESH</span>
+                <span>YOUR MEMORY MAP</span>
               </div>
 
-              <div className="absolute top-4 right-4 z-20 text-[11px] font-mono text-cyan-400">
-                ACTIVE: {activeNode.label.toUpperCase()}
+              <div className="absolute top-4 right-4 z-20 text-xs font-mono text-cyan-400 font-bold">
+                SELECTED: {activeNode.label.toUpperCase()}
               </div>
 
               {/* SVG Link Layer */}
@@ -54,7 +56,7 @@ export const Connections: React.FC = () => {
                 <defs>
                   <linearGradient id="activeSynapseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity="0.9" />
                   </linearGradient>
                 </defs>
 
@@ -82,26 +84,26 @@ export const Connections: React.FC = () => {
                           x2={`${target.x}%`}
                           y2={`${target.y}%`}
                           stroke={isDirectlyActive ? 'url(#activeSynapseGrad)' : isHighlighted ? 'rgba(6, 182, 212, 0.4)' : 'rgba(255, 255, 255, 0.08)'}
-                          strokeWidth={isDirectlyActive ? 2.5 : 1}
+                          strokeWidth={isDirectlyActive ? 3 : 1}
                           strokeDasharray={isDirectlyActive ? 'none' : '3,3'}
                           className="transition-all duration-300"
                         />
                         {isDirectlyActive && (
                           <circle
-                            r="3"
+                            r="3.5"
                             fill="#22d3ee"
                             className="animate-pulse"
                           >
                             <animate
                               attributeName="cx"
                               values={`${node.x}%;${target.x}%;${node.x}%`}
-                              dur="4s"
+                              dur="3.5s"
                               repeatCount="indefinite"
                             />
                             <animate
                               attributeName="cy"
                               values={`${node.y}%;${target.y}%;${node.y}%`}
-                              dur="4s"
+                              dur="3.5s"
                               repeatCount="indefinite"
                             />
                           </circle>
@@ -132,7 +134,7 @@ export const Connections: React.FC = () => {
                       top: `${node.y}%`,
                       transform: 'translate(-50%, -50%)'
                     }}
-                    className={`absolute z-20 group transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-full ${
+                    className={`absolute z-20 group transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-2xl ${
                       isActive
                         ? 'scale-110 z-30'
                         : isDirectNeighbor
@@ -141,26 +143,33 @@ export const Connections: React.FC = () => {
                     }`}
                   >
                     <div
-                      className={`px-3 py-2 rounded-xl border font-mono text-xs transition-all backdrop-blur-md flex items-center gap-2 ${
+                      className={`px-3.5 py-2.5 rounded-2xl border font-mono text-xs transition-all backdrop-blur-md flex items-center gap-2 ${
                         isActive
-                          ? 'bg-slate-900 border-cyan-400 text-white shadow-[0_0_25px_rgba(6,182,212,0.4)]'
+                          ? 'bg-slate-900 border-cyan-400 text-white shadow-[0_0_30px_rgba(6,182,212,0.5)]'
                           : isDirectNeighbor
                           ? 'bg-slate-900/90 border-cyan-500/40 text-slate-200 shadow-sm'
-                          : 'bg-slate-950/70 border-white/10 text-slate-400 hover:border-white/30'
+                          : 'bg-slate-950/80 border-white/10 text-slate-400 hover:border-white/30'
                       }`}
                     >
                       <span
-                        className="w-2 h-2 rounded-full shrink-0"
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: node.color || '#06b6d4' }}
                       />
-                      <span className="font-semibold whitespace-nowrap">{node.label}</span>
+                      <span className="font-bold whitespace-nowrap">{node.label}</span>
                     </div>
+
+                    {/* Curiosity Hover Tag */}
+                    {(isActive || hoveredNodeId === node.id) && (
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-2 py-0.5 rounded-md bg-cyan-950/90 border border-cyan-500/40 text-[9px] font-mono text-cyan-300 whitespace-nowrap shadow-md">
+                        {node.encounters}
+                      </div>
+                    )}
                   </button>
                 );
               })}
 
-              <div className="absolute bottom-4 left-4 z-20 text-[10px] font-mono text-slate-500">
-                ● Hover/Tap any concept node to navigate graph
+              <div className="absolute bottom-4 left-4 z-20 text-[11px] font-mono text-slate-400">
+                💡 Hover or click any concept to inspect how your memories connect
               </div>
             </div>
           </div>
@@ -168,54 +177,57 @@ export const Connections: React.FC = () => {
           {/* Right: Active Node Detail & Contextual Relationship Bridges */}
           <div className="lg:col-span-5 space-y-4">
             
-            {/* Header info */}
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#121524] border border-slate-200 dark:border-white/10 backdrop-blur-xl shadow-md dark:shadow-xl">
+            <div className="p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#121524] border border-slate-200 dark:border-white/10 backdrop-blur-xl shadow-xl">
               
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 font-semibold">
-                  {activeNode.category} NODE
+                <span className="text-[10px] font-mono uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/20 font-bold">
+                  {activeNode.category} TOPIC
                 </span>
                 <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
-                  {activeNode.connections.length} Synaptic Bridges
+                  {activeNode.connections.length} Connected ideas
                 </span>
               </div>
 
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2.5">
                 <span
-                  className="w-3 h-3 rounded-full"
+                  className="w-3.5 h-3.5 rounded-full"
                   style={{ backgroundColor: activeNode.color || '#06b6d4' }}
                 />
                 {activeNode.label}
               </h3>
 
+              <div className="text-xs font-mono text-cyan-600 dark:text-cyan-400 mb-3">
+                {activeNode.encounters}
+              </div>
+
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
                 {activeNode.description}
               </p>
 
-              {/* Relationship Bridges list */}
+              {/* Relationship Bridges list in Plain English */}
               <div className="mt-4 pt-4 border-t border-slate-100 dark:border-white/10">
-                <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5 font-semibold">
+                <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5 font-bold uppercase">
                   <Share2 className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                  <span>SYNTHESIZED RELATIONSHIPS:</span>
+                  <span>WHAT THIS IDEA CONNECTS TO:</span>
                 </div>
 
-                <div className="space-y-2.5 max-h-[200px] overflow-y-auto pr-1">
+                <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
                   {activeNode.connections.map((targetId) => {
                     const target = mockConnectionNodes.find((n) => n.id === targetId);
-                    const bridgeText = activeNode.contextBridge[targetId] || 'Synthesized semantic connection across temporal captures.';
+                    const bridgeText = activeNode.contextBridge[targetId] || 'Connected across your reading history.';
                     if (!target) return null;
 
                     return (
                       <div
                         key={targetId}
                         onClick={() => setSelectedNodeId(targetId)}
-                        className="p-3 rounded-lg bg-slate-50 dark:bg-white/5 hover:bg-cyan-500/10 dark:hover:bg-white/10 border border-slate-200/80 dark:border-white/5 hover:border-cyan-500/40 transition-all cursor-pointer text-xs"
+                        className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-cyan-500/10 dark:hover:bg-white/10 border border-slate-200/80 dark:border-white/5 hover:border-cyan-500/40 transition-all cursor-pointer text-xs group"
                       >
-                        <div className="flex items-center justify-between text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 mb-1">
-                          <span className="flex items-center gap-1">
-                            <span>→</span> {target.label}
+                        <div className="flex items-center justify-between text-xs font-bold text-cyan-700 dark:text-cyan-300 mb-1">
+                          <span className="flex items-center gap-1.5">
+                            <span className="text-cyan-500 font-bold">→</span> {target.label}
                           </span>
-                          <span className="text-[10px] font-mono text-slate-400">Inspect</span>
+                          <span className="text-[10px] font-mono text-slate-400 group-hover:text-cyan-400">Inspect</span>
                         </div>
                         <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-normal">
                           {bridgeText}
