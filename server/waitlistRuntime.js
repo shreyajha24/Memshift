@@ -1,9 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { maskEmail, normalizeEmail, validateEmailForWaitlist } from '../shared/waitlistCommon.js';
-import { DEFAULT_SUPABASE_ANON_KEY, DEFAULT_SUPABASE_URL } from '../shared/supabaseDefaults.js';
 
 const RESEND_COOLDOWN_MS = 10 * 60 * 1000;
-const VERIFY_COOLDOWN_MS = 2 * 60 * 1000;
 const RECENT_LIMIT = 6;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 6;
@@ -22,10 +20,9 @@ function getRequiredEnv(name, aliases = []) {
 }
 
 function getSupabaseConfig() {
-  const url = process.env.SUPABASE_URL?.trim() || process.env.VITE_SUPABASE_URL?.trim() || DEFAULT_SUPABASE_URL;
+  const url = getRequiredEnv('VITE_SUPABASE_URL');
   const serviceRoleKey = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY');
-  const anonKey =
-    process.env.SUPABASE_ANON_KEY?.trim() || process.env.VITE_SUPABASE_ANON_KEY?.trim() || DEFAULT_SUPABASE_ANON_KEY;
+  const anonKey = getRequiredEnv('VITE_SUPABASE_ANON_KEY');
 
   return { url, serviceRoleKey, anonKey };
 }
@@ -144,6 +141,22 @@ async function fetchVerifiedStats(admin) {
   return { verifiedCount, recentMembers, latestSpot: verifiedCount > 0 ? 100 + verifiedCount : 100 };
 }
 
+async function fetchVerifiedSpot(admin, email) {
+  const { data, error } = await admin
+    .from('waitlist')
+    .select('email,verified_at,created_at')
+    .eq('status', 'verified')
+    .order('verified_at', { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  const rows = data || [];
+  const index = rows.findIndex((row) => row.email === email);
+  return index === -1 ? null : 101 + index;
+}
+
 async function ensureWaitlistRow(admin, email, status, extra = {}) {
   const payload = {
     email,
@@ -206,6 +219,7 @@ async function handleJoin(req, res, admin, auth) {
 
   if (existing?.status === 'verified') {
     const stats = await fetchVerifiedStats(admin);
+    const spot = await fetchVerifiedSpot(admin, email);
     return json(res, 200, {
       success: true,
       status: 'verified',
@@ -213,7 +227,7 @@ async function handleJoin(req, res, admin, auth) {
       email,
       message: "You're already on the MemShift waitlist.",
       verifiedAt: existing.verified_at,
-      spot: stats.latestSpot,
+      spot,
       verifiedCount: stats.verifiedCount,
       stats,
     });
@@ -281,11 +295,13 @@ async function handleResend(req, res, admin, auth) {
   }
 
   if (row.status === 'verified') {
+    const spot = await fetchVerifiedSpot(admin, email);
     return json(res, 200, {
       success: true,
       status: 'verified',
       isExisting: true,
       email,
+      spot,
       message: "You're already on the MemShift waitlist.",
     });
   }
@@ -338,6 +354,21 @@ async function handleVerify(req, res, admin) {
   const { data: existing, error: lookupError } = await admin.from('waitlist').select('*').eq('email', email).maybeSingle();
   if (lookupError) {
     throw lookupError;
+  }
+
+  if (existing?.status === 'verified') {
+    const stats = await fetchVerifiedStats(admin);
+    const spot = await fetchVerifiedSpot(admin, email);
+    return json(res, 200, {
+      success: true,
+      status: 'verified',
+      email,
+      spot,
+      verifiedAt: existing.verified_at,
+      message: "You're already on the MemShift waitlist.",
+      verifiedCount: stats.verifiedCount,
+      stats,
+    });
   }
 
   const nextStatus = 'verified';
@@ -406,7 +437,7 @@ export async function handleWaitlistApi(req, res) {
     console.error('Waitlist API error:', error);
     return json(res, 500, {
       success: false,
-      message: error instanceof Error ? error.message : 'Unexpected waitlist error.',
+      message: 'The waitlist is temporarily unavailable. Please try again soon.',
     });
   }
 }

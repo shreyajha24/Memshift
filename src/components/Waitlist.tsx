@@ -56,9 +56,11 @@ export const Waitlist: React.FC = () => {
   const processVerificationCallback = async () => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get('code');
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const hashAccessToken = hashParams.get('access_token');
     const isWaitlistVerify = url.searchParams.get('waitlist') === 'verify';
 
-    if (!code || !isWaitlistVerify) {
+    if ((!code && !hashAccessToken) || !isWaitlistVerify) {
       return;
     }
 
@@ -66,13 +68,22 @@ export const Waitlist: React.FC = () => {
     setStatusMessage('Confirming your email...');
 
     try {
-      const supabase = createBrowserSupabaseClient();
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error || !data.session?.access_token) {
-        throw error || new Error('Unable to confirm your verification link.');
+      let accessToken = hashAccessToken;
+
+      if (!accessToken && code) {
+        const supabase = createBrowserSupabaseClient();
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error || !data.session?.access_token) {
+          throw error || new Error('Unable to confirm your verification link.');
+        }
+        accessToken = data.session.access_token;
       }
 
-      const result = await verifyWaitlistCallback(data.session.access_token);
+      if (!accessToken) {
+        throw new Error('Unable to confirm your verification link.');
+      }
+
+      const result = await verifyWaitlistCallback(accessToken);
       if (!result.success) {
         throw new Error(result.message || 'Unable to finalize verification.');
       }
