@@ -42,27 +42,33 @@ function createSupabaseClients() {
 }
 
 function getOrigin(req) {
-  const envUrl = process.env.APP_URL || process.env.SITE_URL;
-  if (envUrl && String(envUrl).trim()) {
-    const trimmed = String(envUrl).trim();
-    return trimmed.startsWith('http://') || trimmed.startsWith('https://')
-      ? trimmed
-      : `https://${trimmed}`;
+  const appUrl = (process.env.APP_URL || process.env.SITE_URL || '').trim();
+
+  const isProduction =
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL_ENV === 'production' ||
+    process.env.VERCEL === '1';
+
+  if (!appUrl && isProduction) {
+    throw new Error('APP_URL is required in production');
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    const headerOrigin = req?.headers?.origin || req?.headers?.referer;
-    if (headerOrigin) {
-      try {
-        return new URL(headerOrigin).origin;
-      } catch {
-        // fall through
-      }
+  if (appUrl) {
+    return appUrl.startsWith('http://') || appUrl.startsWith('https://')
+      ? appUrl
+      : `https://${appUrl}`;
+  }
+
+  const headerOrigin = req?.headers?.origin || req?.headers?.referer;
+  if (headerOrigin) {
+    try {
+      return new URL(headerOrigin).origin;
+    } catch {
+      // fall through
     }
-    return 'http://localhost:5173';
   }
 
-  return 'https://memshift.vercel.app';
+  return 'http://localhost:5173';
 }
 
 function json(res, statusCode, payload) {
@@ -212,7 +218,10 @@ function buildVerificationRedirectUrl(baseUrl) {
 }
 
 async function sendVerificationEmail(auth, email, redirectTo) {
+  console.log('[WAITLIST] email redirect:', redirectTo);
   const emailRedirectTo = buildVerificationRedirectUrl(redirectTo);
+  console.log('[WAITLIST] emailRedirectTo:', emailRedirectTo);
+
   const { error } = await auth.auth.signInWithOtp({
     email,
     options: {
