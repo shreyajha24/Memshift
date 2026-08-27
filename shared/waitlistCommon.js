@@ -127,14 +127,3 @@ export function validateEmailForWaitlist(email) {
   return { ok: true, email: normalized };
 }
 
-export function maskEmail(email) {
-  const normalized = normalizeEmail(email);
-  const parts = normalized.split('@');
-  if (parts.length !== 2) return normalized;
-
-  const name = parts[0];
-  const domain = parts[1];
-  const maskedName = name.length <= 2 ? `${name[0]}***` : `${name.slice(0, 2)}***${name.slice(-1)}`;
-  return `${maskedName}@${domain}`;
-}
-

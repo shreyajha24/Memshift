@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { maskEmail, normalizeEmail, validateEmailForWaitlist } from '../shared/waitlistCommon.js';
+import { normalizeEmail, validateEmailForWaitlist } from '../shared/waitlistCommon.js';
 
 const RESEND_COOLDOWN_MS = 10 * 60 * 1000;
-const RECENT_LIMIT = 6;
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const RATE_LIMIT_MAX = 6;
 
@@ -74,6 +73,8 @@ function getOrigin(req) {
 function json(res, statusCode, payload) {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   res.end(JSON.stringify(payload));
 }
 
@@ -124,47 +125,40 @@ function allowRequest(key, limit, windowMs) {
   return true;
 }
 
-function computeSpot(index, totalVerified) {
-  return 100 + (totalVerified - index);
-}
-
 async function fetchVerifiedStats(admin) {
-  const { data, error, count } = await admin
+  const { count, error } = await admin
     .from('waitlist')
-    .select('id,email,created_at,verified_at,status', { count: 'exact' })
-    .eq('status', 'verified')
-    .order('verified_at', { ascending: true });
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'verified');
 
   if (error) {
     throw error;
   }
 
-  const verifiedRows = data || [];
-  const verifiedCount = count ?? verifiedRows.length;
-  const recentMembers = verifiedRows.slice(-RECENT_LIMIT).reverse().map((row, index) => ({
-    id: row.id,
-    maskedEmail: maskEmail(row.email),
-    spot: computeSpot(index, verifiedCount),
-    verifiedAt: row.verified_at || row.created_at,
-  }));
-
-  return { verifiedCount, recentMembers, latestSpot: verifiedCount > 0 ? 100 + verifiedCount : 100 };
+  const verifiedCount = count ?? 0;
+  return { verifiedCount, latestSpot: verifiedCount > 0 ? 100 + verifiedCount : 100 };
 }
 
 async function fetchVerifiedSpot(admin, email) {
-  const { data, error } = await admin
+  const { data: row, error: rowError } = await admin
     .from('waitlist')
-    .select('email,verified_at,created_at')
+    .select('verified_at')
     .eq('status', 'verified')
-    .order('verified_at', { ascending: true });
+    .eq('email', email)
+    .maybeSingle();
 
-  if (error) {
-    throw error;
+  if (rowError) {
+    throw rowError;
   }
+  if (!row?.verified_at) return null;
 
-  const rows = data || [];
-  const index = rows.findIndex((row) => row.email === email);
-  return index === -1 ? null : 101 + index;
+  const { count, error } = await admin
+    .from('waitlist')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'verified')
+    .lte('verified_at', row.verified_at);
+  if (error) throw error;
+  return count ? 100 + count : null;
 }
 
 async function ensureWaitlistRow(admin, email, status, extra = {}) {
@@ -180,7 +174,11 @@ async function ensureWaitlistRow(admin, email, status, extra = {}) {
   const { error } = await admin.from('waitlist').upsert(payload, { onConflict: 'email' });
   if (error) throw error;
 
-  const { data, error: selectError } = await admin.from('waitlist').select('*').eq('email', email).single();
+  const { data, error: selectError } = await admin
+    .from('waitlist')
+    .select('created_at,last_verification_sent_at,resend_count,status,verified_at')
+    .eq('email', email)
+    .single();
   if (selectError) throw selectError;
   return data;
 }
@@ -207,7 +205,6 @@ function logSafeAuthError(context, error) {
     name: error?.name || 'Error',
     code: error?.code || 'unknown',
     status: error?.status || error?.statusCode || 'unknown',
-    message: error?.message || 'Unknown error message',
   });
 }
 
@@ -222,9 +219,7 @@ function buildVerificationRedirectUrl(baseUrl) {
 }
 
 async function sendVerificationEmail(auth, email, redirectTo) {
-  console.log('[WAITLIST] email redirect:', redirectTo);
   const emailRedirectTo = buildVerificationRedirectUrl(redirectTo);
-  console.log('[WAITLIST] emailRedirectTo:', emailRedirectTo);
 
   const { error } = await auth.auth.signInWithOtp({
     email,
@@ -262,7 +257,11 @@ async function handleJoin(req, res, admin, auth) {
     return json(res, 429, { success: false, message: 'Too many requests. Please wait a minute and try again.' });
   }
 
-  const { data: existing, error: lookupError } = await admin.from('waitlist').select('*').eq('email', email).maybeSingle();
+  const { data: existing, error: lookupError } = await admin
+    .from('waitlist')
+    .select('created_at,last_verification_sent_at,resend_count,status,verified_at')
+    .eq('email', email)
+    .maybeSingle();
   if (lookupError) {
     throw lookupError;
   }
@@ -274,12 +273,9 @@ async function handleJoin(req, res, admin, auth) {
       success: true,
       status: 'verified',
       isExisting: true,
-      email,
       message: "You're already on the MemShift waitlist.",
-      verifiedAt: existing.verified_at,
       spot,
       verifiedCount: stats.verifiedCount,
-      stats,
     });
   }
 
@@ -295,7 +291,6 @@ async function handleJoin(req, res, admin, auth) {
       success: true,
       status: 'pending',
       isExisting: true,
-      email,
       message: 'Check your inbox to verify your email.',
       pending: true,
     });
@@ -310,14 +305,13 @@ async function handleJoin(req, res, admin, auth) {
         success: false,
         status: 'rate_limited',
         rateLimited: true,
-        email,
         message: 'Verification email limit reached. Please wait before requesting another email.',
       });
     }
     throw emailError;
   }
 
-  const updated = await ensureWaitlistRow(admin, email, 'pending', {
+  await ensureWaitlistRow(admin, email, 'pending', {
     created_at: row.created_at || now,
     last_verification_sent_at: now,
     resend_count: (row.resend_count || 0) + 1,
@@ -328,10 +322,8 @@ async function handleJoin(req, res, admin, auth) {
     status: 'pending',
     isNew: !existing,
     isExisting: !!existing,
-    email,
     message: 'Check your inbox to verify your email.',
     pending: true,
-    resendAvailableAt: updated.last_verification_sent_at,
   });
 }
 
@@ -349,7 +341,11 @@ async function handleResend(req, res, admin, auth) {
     return json(res, 429, { success: false, message: 'Too many requests. Please wait a minute and try again.' });
   }
 
-  const { data: row, error } = await admin.from('waitlist').select('*').eq('email', email).maybeSingle();
+  const { data: row, error } = await admin
+    .from('waitlist')
+    .select('status,last_verification_sent_at,resend_count')
+    .eq('email', email)
+    .maybeSingle();
   if (error) {
     throw error;
   }
@@ -364,7 +360,6 @@ async function handleResend(req, res, admin, auth) {
       success: true,
       status: 'verified',
       isExisting: true,
-      email,
       spot,
       message: "You're already on the MemShift waitlist.",
     });
@@ -388,7 +383,6 @@ async function handleResend(req, res, admin, auth) {
         success: false,
         status: 'rate_limited',
         rateLimited: true,
-        email,
         message: 'Verification email limit reached. Please wait before requesting another email.',
       });
     }
@@ -407,7 +401,6 @@ async function handleResend(req, res, admin, auth) {
     success: true,
     status: 'pending',
     isExisting: true,
-    email,
     message: 'Verification email sent. Check your inbox.',
   });
 }
@@ -436,23 +429,25 @@ async function handleVerify(req, res, admin) {
 
   if (!isAuthEmailVerified(authUser)) {
     console.warn('[WAITLIST] Verification blocked for unconfirmed Supabase user:', {
-      userId: authUser.id,
-      email: maskEmail(authUser.email),
+      verified: false,
     });
     return json(res, 403, { success: false, message: 'Email verification has not completed yet.' });
   }
 
   const email = normalizeEmail(authUser.email);
   const now = new Date().toISOString();
-  const { data: existing, error: lookupError } = await admin.from('waitlist').select('*').eq('email', email).maybeSingle();
+  const { data: existing, error: lookupError } = await admin
+    .from('waitlist')
+    .select('status,verified_at')
+    .eq('email', email)
+    .maybeSingle();
   if (lookupError) {
     throw lookupError;
   }
 
   if (!existing) {
     console.warn('[WAITLIST] No waitlist row matched verified Supabase user:', {
-      userId: authUser.id,
-      email: maskEmail(email),
+      matched: false,
     });
     return json(res, 404, {
       success: false,
@@ -466,12 +461,9 @@ async function handleVerify(req, res, admin) {
     return json(res, 200, {
       success: true,
       status: 'verified',
-      email,
       spot,
-      verifiedAt: existing.verified_at,
       message: "Email verified! You're officially on the MemShift waitlist.",
       verifiedCount: stats.verifiedCount,
-      stats,
     });
   }
 
@@ -482,7 +474,7 @@ async function handleVerify(req, res, admin) {
       verified_at: now,
     })
     .eq('email', email)
-    .select('*')
+    .select('verified_at')
     .maybeSingle();
 
   if (updateError) {
@@ -491,8 +483,7 @@ async function handleVerify(req, res, admin) {
 
   if (!verifiedRow) {
     console.warn('[WAITLIST] Verified update matched no waitlist row:', {
-      userId: authUser.id,
-      email: maskEmail(email),
+      matched: false,
     });
     return json(res, 404, {
       success: false,
@@ -506,12 +497,9 @@ async function handleVerify(req, res, admin) {
   return json(res, 200, {
     success: true,
     status: 'verified',
-    email,
     spot,
-    verifiedAt: verifiedRow.verified_at || now,
     message: "Email verified! You're officially on the MemShift waitlist.",
     verifiedCount: stats.verifiedCount,
-    stats,
   });
 }
 
@@ -519,9 +507,7 @@ async function handleStats(req, res, admin) {
   const stats = await fetchVerifiedStats(admin);
   return json(res, 200, {
     success: true,
-    verifiedCount: stats.verifiedCount,
-    latestSpot: stats.latestSpot,
-    recentMembers: stats.recentMembers,
+    count: stats.verifiedCount,
   });
 }
 
@@ -557,10 +543,7 @@ export async function handleWaitlistApi(req, res) {
         message: 'Verification email limit reached. Please wait before requesting another email.',
       });
     }
-    console.error('Waitlist API error:', {
-      name: error?.name || 'Error',
-      message: error?.message || 'Unexpected waitlist error',
-    });
+    console.error('Waitlist API error:', error?.name || 'Unknown error');
     return json(res, 500, {
       success: false,
       message: 'The waitlist is temporarily unavailable. Please try again soon.',

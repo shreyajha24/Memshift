@@ -8,7 +8,6 @@ import {
   Copy,
   Check,
   Shield,
-  Users,
   Info,
 } from 'lucide-react';
 import { Countdown } from './Countdown';
@@ -31,13 +30,11 @@ export const Waitlist: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState('');
   const [spotNumber, setSpotNumber] = useState<number | null>(null);
   const [isExistingUser, setIsExistingUser] = useState(false);
-  const [registrationDate, setRegistrationDate] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [stats, setStats] = useState<WaitlistStats>({ verifiedCount: 0, latestSpot: 100, recentMembers: [] });
+  const [stats, setStats] = useState<WaitlistStats>({ verifiedCount: 0, latestSpot: 100 });
   const [statsError, setStatsError] = useState<string | null>(null);
-  const [showRecent, setShowRecent] = useState(false);
 
   useEffect(() => {
     void loadStats();
@@ -58,7 +55,7 @@ export const Waitlist: React.FC = () => {
       setStats(liveStats);
       setStatsError(null);
     } catch (error) {
-      console.error('Failed to load waitlist stats', error);
+      console.error('Failed to load waitlist stats');
       setStatsError('Live waitlist stats are temporarily unavailable.');
     }
   };
@@ -118,10 +115,8 @@ export const Waitlist: React.FC = () => {
         throw new Error(result.message || 'Unable to finalize verification.');
       }
 
-      setEmail(result.email || email);
       setSpotNumber(result.spot ?? null);
       setIsExistingUser(false);
-      setRegistrationDate(result.verifiedAt || new Date().toISOString());
       setStatus('success');
       setStatusMessage(result.message || "You're already on the MemShift waitlist.");
       await loadStats();
@@ -131,7 +126,7 @@ export const Waitlist: React.FC = () => {
       cleanUrl.hash = '';
       window.history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}`);
     } catch (error: any) {
-      console.error('Verification callback failed', error);
+      console.error('Verification callback failed');
       setStatus('error');
       setStatusMessage(error?.message || 'Unable to verify your email right now.');
     }
@@ -178,7 +173,6 @@ export const Waitlist: React.FC = () => {
         setStatus('success');
         setIsExistingUser(!!result.isExisting);
         setSpotNumber(result.spot ?? null);
-        setRegistrationDate(result.verifiedAt || new Date().toISOString());
         setStatusMessage(result.message || "You're already on the MemShift waitlist.");
         await loadStats();
         return;
@@ -189,10 +183,9 @@ export const Waitlist: React.FC = () => {
       setStatusMessage(result.message || 'Check your inbox to verify your email.');
       setResendCooldown(60);
       setSpotNumber(null);
-      setRegistrationDate(null);
       await loadStats();
     } catch (error: any) {
-      console.error('Waitlist submission failed', error);
+      console.error('Waitlist submission failed');
       setStatus('error');
       setStatusMessage(error?.message || 'Unable to send verification email. Please try again.');
     }
@@ -240,17 +233,8 @@ export const Waitlist: React.FC = () => {
     setStatus('idle');
     setSpotNumber(null);
     setIsExistingUser(false);
-    setRegistrationDate(null);
     setStatusMessage('');
   };
-
-  const formattedDate = registrationDate
-    ? new Date(registrationDate).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : null;
 
   return (
     <section id="waitlist" className="relative py-28 sm:py-36 overflow-hidden">
@@ -313,13 +297,6 @@ export const Waitlist: React.FC = () => {
                   <span className="text-xl font-mono font-bold text-cyan-300">
                     {spotNumber ? `#${spotNumber}` : 'Confirmed'}
                   </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-mono text-slate-400 block">ENROLLED EMAIL</span>
-                  <span className="text-xs font-mono text-slate-200">{email}</span>
-                  {formattedDate && (
-                    <span className="text-[9px] font-mono text-slate-500 block">Verified {formattedDate}</span>
-                  )}
                 </div>
               </div>
 
@@ -526,34 +503,6 @@ export const Waitlist: React.FC = () => {
             </form>
           )}
 
-          {stats.recentMembers.length > 0 && (
-            <div className="mt-8 pt-6 border-t border-white/10">
-              <button
-                type="button"
-                onClick={() => setShowRecent(!showRecent)}
-                className="text-xs font-mono text-slate-400 hover:text-cyan-300 flex items-center justify-center gap-1.5 mx-auto transition-colors"
-              >
-                <Users className="w-3.5 h-3.5 text-cyan-400" />
-                <span>{showRecent ? 'Hide recent entries' : `View recent verified entries (${stats.verifiedCount} total)`}</span>
-              </button>
-
-              {showRecent && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-left max-w-2xl mx-auto animate-in fade-in duration-200">
-                  {stats.recentMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-[11px] font-mono text-slate-300 flex items-center justify-between"
-                    >
-                      <span className="truncate mr-2">{member.maskedEmail}</span>
-                      <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] shrink-0 font-bold">
-                        #{member.spot}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </section>

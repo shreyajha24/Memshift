@@ -15,7 +15,9 @@ export function createBrowserSupabaseClient() {
   return createClient(url, anonKey, {
     auth: {
       autoRefreshToken: false,
-      persistSession: true,
+      // Verification uses the one-time callback token; do not persist auth
+      // sessions (which contain access/refresh tokens) in browser storage.
+      persistSession: false,
       detectSessionInUrl: false,
     },
   });

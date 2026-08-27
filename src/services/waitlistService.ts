@@ -4,33 +4,22 @@ export interface WaitlistRegistrationResult {
   success: boolean;
   status?: 'pending' | 'verified' | 'rate_limited';
   rateLimited?: boolean;
-  email?: string;
-  verifiedAt?: string;
   verifiedCount?: number;
   spot?: number;
   isNew?: boolean;
   isExisting?: boolean;
   pending?: boolean;
-  resendAvailableAt?: string;
   message?: string;
 }
 
 export interface WaitlistStats {
   verifiedCount: number;
   latestSpot: number;
-  recentMembers: Array<{
-    id: string;
-    maskedEmail: string;
-    spot: number;
-    verifiedAt: string;
-  }>;
 }
 
 export interface WaitlistVerificationResult {
   success: boolean;
   status?: 'verified';
-  email?: string;
-  verifiedAt?: string;
   spot?: number;
   verifiedCount?: number;
   message?: string;
@@ -39,8 +28,6 @@ export interface WaitlistVerificationResult {
 export interface WaitlistCallbackResult {
   success: boolean;
   message: string;
-  email?: string;
-  accessToken?: string;
 }
 
 export function validateJoinEmail(email: string) {
@@ -142,9 +129,8 @@ export async function fetchWaitlistStats(): Promise<WaitlistStats> {
   }
 
   return {
-    verifiedCount: data.verifiedCount ?? 0,
-    latestSpot: data.latestSpot ?? 100,
-    recentMembers: data.recentMembers ?? [],
+    verifiedCount: data.count ?? 0,
+    latestSpot: (data.count ?? 0) > 0 ? 100 + data.count : 100,
   };
 }
 
