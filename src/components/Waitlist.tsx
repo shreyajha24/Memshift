@@ -21,7 +21,7 @@ import {
 } from '../services/waitlistService';
 import { createBrowserSupabaseClient } from '../lib/supabaseClient';
 
-type ViewState = 'idle' | 'loading' | 'pending' | 'success' | 'error' | 'verifying';
+type ViewState = 'idle' | 'loading' | 'pending' | 'rate_limited' | 'success' | 'error' | 'verifying';
 
 export const Waitlist: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -136,7 +136,7 @@ export const Waitlist: React.FC = () => {
 
       if (!result.success) {
         if (result.rateLimited) {
-          setStatus('pending');
+          setStatus('rate_limited');
           setResendCooldown(60);
           setStatusMessage(result.message || 'Verification email limit reached. Please wait before requesting another email.');
           await loadStats();
@@ -144,7 +144,7 @@ export const Waitlist: React.FC = () => {
         }
 
         setStatus('error');
-        setStatusMessage(result.message || 'Unable to join waitlist.');
+        setStatusMessage(result.message || 'Unable to send verification email. Please try again.');
         return;
       }
 
@@ -168,7 +168,7 @@ export const Waitlist: React.FC = () => {
     } catch (error: any) {
       console.error('Waitlist submission failed', error);
       setStatus('error');
-      setStatusMessage(error?.message || 'An unexpected error occurred. Please try again.');
+      setStatusMessage(error?.message || 'Unable to send verification email. Please try again.');
     }
   };
 
@@ -181,10 +181,11 @@ export const Waitlist: React.FC = () => {
       const result = await resendVerification(email);
       if (!result.success) {
         if (result.rateLimited) {
+          setStatus('rate_limited');
           setResendCooldown(60);
           setStatusMessage(result.message || 'Verification email limit reached. Please wait before requesting another email.');
         } else {
-          setStatusMessage(result.message || 'Unable to resend verification email.');
+          setStatusMessage(result.message || 'Unable to resend verification email. Please try again later.');
         }
         return;
       }
@@ -193,7 +194,7 @@ export const Waitlist: React.FC = () => {
       setResendCooldown(60);
       setStatusMessage(result.message || 'Verification email sent. Check your inbox.');
     } catch (error: any) {
-      setStatusMessage(error?.message || 'Unable to resend verification email.');
+      setStatusMessage(error?.message || 'Unable to resend verification email. Please try again later.');
     } finally {
       setResendLoading(false);
     }
@@ -323,6 +324,58 @@ export const Waitlist: React.FC = () => {
                 </button>
               </div>
             </div>
+          ) : status === 'rate_limited' ? (
+            <div className="max-w-md mx-auto p-6 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-left animate-in zoom-in-95 duration-300">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 shrink-0">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-mono text-amber-400 uppercase tracking-wider font-semibold">
+                    RATE LIMIT REACHED
+                  </div>
+                  <div className="text-sm font-semibold text-white">Please wait before requesting another email.</div>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-300">
+                {statusMessage || 'Verification email limit reached. Please wait before requesting another email.'}
+              </p>
+
+              <div className="mt-4 p-3.5 rounded-xl bg-slate-900/90 border border-white/10">
+                <span className="text-[10px] font-mono text-slate-400 block">PENDING EMAIL</span>
+                <span className="text-xs font-mono text-slate-200 break-all">{email}</span>
+              </div>
+
+              <div className="flex items-center gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resendLoading || resendCooldown > 0}
+                  className="flex-1 py-2.5 px-3 rounded-lg bg-amber-500/15 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-mono text-amber-200 flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {resendLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5" />
+                  )}
+                  <span>
+                    {resendLoading
+                      ? 'Sending...'
+                      : resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : 'Resend verification'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="py-2.5 px-3 rounded-lg text-xs font-mono text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  Change email
+                </button>
+              </div>
+            </div>
           ) : status === 'pending' ? (
             <div className="max-w-md mx-auto p-6 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 text-left animate-in zoom-in-95 duration-300">
               <div className="flex items-center gap-3 mb-3">
@@ -338,7 +391,7 @@ export const Waitlist: React.FC = () => {
               </div>
 
               <p className="text-sm text-slate-300">
-                {statusMessage || 'Click the verification link to mark this email as a verified waitlist member.'}
+                Check your inbox to verify your email.
               </p>
 
               <div className="mt-4 p-3.5 rounded-xl bg-slate-900/90 border border-white/10">
