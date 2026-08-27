@@ -50,20 +50,16 @@ function getOrigin(req) {
       : `https://${trimmed}`;
   }
 
-  const headerOrigin = req?.headers?.origin || req?.headers?.referer;
-  if (headerOrigin) {
-    try {
-      return new URL(headerOrigin).origin;
-    } catch {
-      // fall through
+  if (process.env.NODE_ENV === 'development') {
+    const headerOrigin = req?.headers?.origin || req?.headers?.referer;
+    if (headerOrigin) {
+      try {
+        return new URL(headerOrigin).origin;
+      } catch {
+        // fall through
+      }
     }
-  }
-
-  const host = req?.headers?.host;
-  if (host) {
-    const forwardedProto = req?.headers?.['x-forwarded-proto'];
-    const protocol = forwardedProto ? String(forwardedProto).split(',')[0].trim() : 'https';
-    return `${protocol}://${host}`;
+    return 'http://localhost:5173';
   }
 
   return 'https://memshift.vercel.app';
