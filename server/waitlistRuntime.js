@@ -42,7 +42,15 @@ function createSupabaseClients() {
 }
 
 function getOrigin(req) {
-  const headerOrigin = req.headers.origin || req.headers.referer;
+  const envUrl = process.env.APP_URL || process.env.SITE_URL;
+  if (envUrl && String(envUrl).trim()) {
+    const trimmed = String(envUrl).trim();
+    return trimmed.startsWith('http://') || trimmed.startsWith('https://')
+      ? trimmed
+      : `https://${trimmed}`;
+  }
+
+  const headerOrigin = req?.headers?.origin || req?.headers?.referer;
   if (headerOrigin) {
     try {
       return new URL(headerOrigin).origin;
@@ -51,9 +59,9 @@ function getOrigin(req) {
     }
   }
 
-  const host = req.headers.host;
+  const host = req?.headers?.host;
   if (host) {
-    const forwardedProto = req.headers['x-forwarded-proto'];
+    const forwardedProto = req?.headers?.['x-forwarded-proto'];
     const protocol = forwardedProto ? String(forwardedProto).split(',')[0].trim() : 'https';
     return `${protocol}://${host}`;
   }
@@ -175,11 +183,18 @@ async function ensureWaitlistRow(admin, email, status, extra = {}) {
   return data;
 }
 
+function buildVerificationRedirectUrl(baseUrl) {
+  const origin = (baseUrl && String(baseUrl).trim()) || 'https://memshift.vercel.app';
+  const cleanBase = origin.replace(/\/+$/, '');
+  return `${cleanBase}/?waitlist=verify`;
+}
+
 async function sendVerificationEmail(auth, email, redirectTo) {
+  const emailRedirectTo = buildVerificationRedirectUrl(redirectTo);
   const { error } = await auth.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${redirectTo}?waitlist=verify`,
+      emailRedirectTo,
     },
   });
 
