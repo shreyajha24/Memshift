@@ -69,6 +69,12 @@ export const Footer: React.FC = () => {
             >
               Waitlist
             </button>
+            <a
+              href="/privacy"
+              className="hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            >
+              Privacy Policy
+            </a>
           </div>
 
           {/* Back to top button */}

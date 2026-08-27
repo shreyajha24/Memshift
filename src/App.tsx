@@ -17,9 +17,11 @@ import { FAQ } from './components/FAQ';
 import { Waitlist } from './components/Waitlist';
 import { Footer } from './components/Footer';
 import { CommandPalette } from './components/CommandPalette';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
 
 export function App() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const isPrivacyPage = window.location.pathname.replace(/\/+$/, '') === '/privacy';
 
   // Global key listener for ⌘K or Ctrl+K
   useEffect(() => {
@@ -55,11 +57,14 @@ export function App() {
         <Navbar onOpenSearch={() => setCommandPaletteOpen(true)} />
 
         <main>
-          {/* Section 1: Hero & Interactive 3D Memory World */}
-          <Hero
-            onJoinWaitlist={scrollToWaitlist}
-            onExplore={scrollToExplore}
-          />
+          {isPrivacyPage ? (
+            <PrivacyPolicy />
+          ) : <>
+            {/* Section 1: Hero & Interactive 3D Memory World */}
+            <Hero
+              onJoinWaitlist={scrollToWaitlist}
+              onExplore={scrollToExplore}
+            />
 
           {/* Section 2: "You don't forget the idea. You forget where you found it." */}
           <ProblemSection />
@@ -97,8 +102,9 @@ export function App() {
           {/* Section 13: FAQ Accordion */}
           <FAQ />
 
-          {/* Section 14: Real Waitlist CTA with live queue and spot pass */}
-          <Waitlist />
+            {/* Section 14: Real Waitlist CTA with live queue and spot pass */}
+            <Waitlist />
+          </>}
         </main>
 
         {/* Minimal Footer */}
