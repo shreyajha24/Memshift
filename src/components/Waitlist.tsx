@@ -20,6 +20,7 @@ import {
   WaitlistStats,
 } from '../services/waitlistService';
 import { createBrowserSupabaseClient } from '../lib/supabaseClient';
+import { trackWaitlistSignup } from '../lib/analytics';
 
 type ViewState = 'idle' | 'loading' | 'pending' | 'rate_limited' | 'success' | 'error' | 'verifying';
 
@@ -170,6 +171,8 @@ export const Waitlist: React.FC = () => {
         setStatusMessage(result.message || 'Unable to send verification email. Please try again.');
         return;
       }
+
+      trackWaitlistSignup();
 
       if (result.status === 'verified') {
         setStatus('success');
