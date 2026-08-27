@@ -33,6 +33,7 @@ export const Waitlist: React.FC = () => {
   const [registrationDate, setRegistrationDate] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [stats, setStats] = useState<WaitlistStats>({ verifiedCount: 0, latestSpot: 100, recentMembers: [] });
   const [statsError, setStatsError] = useState<string | null>(null);
   const [showRecent, setShowRecent] = useState(false);
@@ -41,6 +42,14 @@ export const Waitlist: React.FC = () => {
     void loadStats();
     void processVerificationCallback();
   }, []);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const loadStats = async () => {
     try {
@@ -126,6 +135,14 @@ export const Waitlist: React.FC = () => {
       const result = await registerWaitlistUser(email, honeypot);
 
       if (!result.success) {
+        if (result.rateLimited) {
+          setStatus('pending');
+          setResendCooldown(60);
+          setStatusMessage(result.message || 'Verification email limit reached. Please wait before requesting another email.');
+          await loadStats();
+          return;
+        }
+
         setStatus('error');
         setStatusMessage(result.message || 'Unable to join waitlist.');
         return;
@@ -144,6 +161,7 @@ export const Waitlist: React.FC = () => {
       setStatus('pending');
       setIsExistingUser(!!result.isExisting);
       setStatusMessage(result.message || 'Check your inbox to verify your email.');
+      setResendCooldown(60);
       setSpotNumber(null);
       setRegistrationDate(null);
       await loadStats();
@@ -155,17 +173,24 @@ export const Waitlist: React.FC = () => {
   };
 
   const handleResendVerification = async () => {
+    if (resendLoading || resendCooldown > 0) return;
     setResendLoading(true);
     setStatusMessage('');
 
     try {
       const result = await resendVerification(email);
       if (!result.success) {
-        setStatusMessage(result.message || 'Unable to resend verification email.');
+        if (result.rateLimited) {
+          setResendCooldown(60);
+          setStatusMessage(result.message || 'Verification email limit reached. Please wait before requesting another email.');
+        } else {
+          setStatusMessage(result.message || 'Unable to resend verification email.');
+        }
         return;
       }
 
       setStatus('pending');
+      setResendCooldown(60);
       setStatusMessage(result.message || 'Verification email sent. Check your inbox.');
     } catch (error: any) {
       setStatusMessage(error?.message || 'Unable to resend verification email.');
@@ -325,11 +350,21 @@ export const Waitlist: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleResendVerification}
-                  disabled={resendLoading}
-                  className="flex-1 py-2.5 px-3 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/20 border border-cyan-500/30 text-xs font-mono text-cyan-200 flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60"
+                  disabled={resendLoading || resendCooldown > 0}
+                  className="flex-1 py-2.5 px-3 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/20 border border-cyan-500/30 text-xs font-mono text-cyan-200 flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {resendLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                  <span>Resend verification</span>
+                  {resendLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5" />
+                  )}
+                  <span>
+                    {resendLoading
+                      ? 'Sending...'
+                      : resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : 'Resend verification'}
+                  </span>
                 </button>
                 <button
                   type="button"

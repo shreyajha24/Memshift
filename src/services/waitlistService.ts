@@ -2,7 +2,8 @@ import { validateEmailForWaitlist, normalizeEmail } from '../../shared/waitlistC
 
 export interface WaitlistRegistrationResult {
   success: boolean;
-  status?: 'pending' | 'verified';
+  status?: 'pending' | 'verified' | 'rate_limited';
+  rateLimited?: boolean;
   email?: string;
   verifiedAt?: string;
   verifiedCount?: number;
@@ -84,9 +85,17 @@ export async function registerWaitlistUser(email: string, honeypot = ''): Promis
 
   const data = await readJsonResponse<WaitlistRegistrationResult | { success?: boolean; message?: string }>(res);
   if (!res.ok || !data.success) {
+    const isRateLimited = res.status === 429 || (data as any)?.rateLimited || (data as any)?.status === 'rate_limited';
     return {
       success: false,
-      message: extractErrorMessage(data, 'Failed to join the waitlist.'),
+      rateLimited: isRateLimited,
+      status: isRateLimited ? 'rate_limited' : undefined,
+      message: extractErrorMessage(
+        data,
+        isRateLimited
+          ? 'Verification email limit reached. Please wait before requesting another email.'
+          : 'Failed to join the waitlist.'
+      ),
     };
   }
 
@@ -107,9 +116,17 @@ export async function resendVerification(email: string): Promise<WaitlistRegistr
 
   const data = await readJsonResponse<WaitlistRegistrationResult | { success?: boolean; message?: string }>(res);
   if (!res.ok || !data.success) {
+    const isRateLimited = res.status === 429 || (data as any)?.rateLimited || (data as any)?.status === 'rate_limited';
     return {
       success: false,
-      message: extractErrorMessage(data, 'Failed to resend verification email.'),
+      rateLimited: isRateLimited,
+      status: isRateLimited ? 'rate_limited' : undefined,
+      message: extractErrorMessage(
+        data,
+        isRateLimited
+          ? 'Verification email limit reached. Please wait before requesting another email.'
+          : 'Failed to resend verification email.'
+      ),
     };
   }
 

@@ -179,6 +179,32 @@ async function ensureWaitlistRow(admin, email, status, extra = {}) {
   return data;
 }
 
+function isSupabaseEmailRateLimitError(error) {
+  if (!error) return false;
+  const status = error.status || error.statusCode || error.code;
+  const code = String(error.code || '');
+  const message = String(error.message || error.error_description || '').toLowerCase();
+
+  return (
+    status === 429 ||
+    status === '429' ||
+    code === 'over_email_send_rate_limit' ||
+    code === 'over_request_rate_limit' ||
+    message.includes('rate limit') ||
+    message.includes('over_email_send_rate_limit') ||
+    message.includes('email rate limit')
+  );
+}
+
+function logSafeAuthError(context, error) {
+  console.error(`Supabase Auth error in ${context}:`, {
+    name: error?.name || 'Error',
+    code: error?.code || 'unknown',
+    status: error?.status || error?.statusCode || 'unknown',
+    message: error?.message || 'Unknown error message',
+  });
+}
+
 function buildVerificationRedirectUrl(baseUrl) {
   const origin = (baseUrl && String(baseUrl).trim()) || 'https://memshift.vercel.app';
   const cleanBase = origin.replace(/\/+$/, '');
@@ -262,7 +288,21 @@ async function handleJoin(req, res, admin, auth) {
     });
   }
 
-  await sendVerificationEmail(auth, email, getOrigin(req));
+  try {
+    await sendVerificationEmail(auth, email, getOrigin(req));
+  } catch (emailError) {
+    logSafeAuthError('handleJoin', emailError);
+    if (isSupabaseEmailRateLimitError(emailError)) {
+      return json(res, 429, {
+        success: false,
+        status: 'rate_limited',
+        rateLimited: true,
+        email,
+        message: 'Verification email limit reached. Please wait before requesting another email.',
+      });
+    }
+    throw emailError;
+  }
 
   const updated = await ensureWaitlistRow(admin, email, 'pending', {
     created_at: row.created_at || now,
@@ -320,12 +360,28 @@ async function handleResend(req, res, admin, auth) {
   if (!parseResendCooldown(row)) {
     return json(res, 429, {
       success: false,
-      status: 'pending',
+      status: 'rate_limited',
+      rateLimited: true,
       message: 'A verification email was already sent recently. Check your inbox.',
     });
   }
 
-  await sendVerificationEmail(auth, email, getOrigin(req));
+  try {
+    await sendVerificationEmail(auth, email, getOrigin(req));
+  } catch (emailError) {
+    logSafeAuthError('handleResend', emailError);
+    if (isSupabaseEmailRateLimitError(emailError)) {
+      return json(res, 429, {
+        success: false,
+        status: 'rate_limited',
+        rateLimited: true,
+        email,
+        message: 'Verification email limit reached. Please wait before requesting another email.',
+      });
+    }
+    throw emailError;
+  }
+
   await admin
     .from('waitlist')
     .update({
@@ -445,7 +501,19 @@ export async function handleWaitlistApi(req, res) {
 
     return json(res, 404, { success: false, message: 'Not found' });
   } catch (error) {
-    console.error('Waitlist API error:', error);
+    if (isSupabaseEmailRateLimitError(error)) {
+      logSafeAuthError('handleWaitlistApi', error);
+      return json(res, 429, {
+        success: false,
+        status: 'rate_limited',
+        rateLimited: true,
+        message: 'Verification email limit reached. Please wait before requesting another email.',
+      });
+    }
+    console.error('Waitlist API error:', {
+      name: error?.name || 'Error',
+      message: error?.message || 'Unexpected waitlist error',
+    });
     return json(res, 500, {
       success: false,
       message: 'The waitlist is temporarily unavailable. Please try again soon.',
