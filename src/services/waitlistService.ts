@@ -151,8 +151,11 @@ export async function fetchWaitlistStats(): Promise<WaitlistStats> {
 export async function verifyWaitlistCallback(accessToken: string): Promise<WaitlistVerificationResult> {
   const res = await fetch('/api/waitlist/verify', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ accessToken }),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({}),
   });
 
   const data = await readJsonResponse<WaitlistVerificationResult | { success?: boolean; message?: string }>(res);
@@ -165,4 +168,3 @@ export async function verifyWaitlistCallback(accessToken: string): Promise<Waitl
 
   return data as WaitlistVerificationResult;
 }
-

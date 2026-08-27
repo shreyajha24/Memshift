@@ -67,9 +67,11 @@ export const Waitlist: React.FC = () => {
     const code = url.searchParams.get('code');
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const hashAccessToken = hashParams.get('access_token');
+    const hashRefreshToken = hashParams.get('refresh_token');
+    const hasSupabaseCallback = Boolean(code || hashAccessToken || url.searchParams.get('error') || hashParams.get('error'));
     const isWaitlistVerify = url.searchParams.get('waitlist') === 'verify';
 
-    if ((!code && !hashAccessToken) || !isWaitlistVerify) {
+    if (!isWaitlistVerify && !hasSupabaseCallback) {
       return;
     }
 
@@ -78,14 +80,32 @@ export const Waitlist: React.FC = () => {
 
     try {
       let accessToken = hashAccessToken;
+      const supabase = createBrowserSupabaseClient();
 
       if (!accessToken && code) {
-        const supabase = createBrowserSupabaseClient();
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         if (error || !data.session?.access_token) {
           throw error || new Error('Unable to confirm your verification link.');
         }
         accessToken = data.session.access_token;
+      }
+
+      if (accessToken && hashRefreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: hashRefreshToken,
+        });
+        if (error) {
+          throw error;
+        }
+      }
+
+      if (!accessToken) {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          throw error;
+        }
+        accessToken = data.session?.access_token || null;
       }
 
       if (!accessToken) {
@@ -105,7 +125,10 @@ export const Waitlist: React.FC = () => {
       setStatusMessage(result.message || "You're already on the MemShift waitlist.");
       await loadStats();
 
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.search = '?waitlist=verify';
+      cleanUrl.hash = '';
+      window.history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}`);
     } catch (error: any) {
       console.error('Verification callback failed', error);
       setStatus('error');

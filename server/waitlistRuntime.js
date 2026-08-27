@@ -211,6 +211,10 @@ function logSafeAuthError(context, error) {
   });
 }
 
+function isAuthEmailVerified(user) {
+  return Boolean(user?.email_confirmed_at || user?.confirmed_at);
+}
+
 function buildVerificationRedirectUrl(baseUrl) {
   const origin = (baseUrl && String(baseUrl).trim()) || 'https://memshift.vercel.app';
   const cleanBase = origin.replace(/\/+$/, '');
@@ -410,7 +414,10 @@ async function handleResend(req, res, admin, auth) {
 
 async function handleVerify(req, res, admin) {
   const body = await readBody(req);
-  const accessToken = String(body.accessToken || '').trim();
+  const authHeader = req.headers.authorization || '';
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const accessToken = String(body.accessToken || bearerToken || '').trim();
+
   if (!accessToken) {
     return json(res, 400, { success: false, message: 'Missing verification session.' });
   }
@@ -421,15 +428,36 @@ async function handleVerify(req, res, admin) {
   }
 
   const { data: userResult, error: userError } = await admin.auth.getUser(accessToken);
-  if (userError || !userResult?.user?.email) {
+  const authUser = userResult?.user;
+  if (userError || !authUser?.email) {
+    logSafeAuthError('handleVerify', userError);
     return json(res, 401, { success: false, message: 'Verification session is invalid or expired.' });
   }
 
-  const email = normalizeEmail(userResult.user.email);
+  if (!isAuthEmailVerified(authUser)) {
+    console.warn('[WAITLIST] Verification blocked for unconfirmed Supabase user:', {
+      userId: authUser.id,
+      email: maskEmail(authUser.email),
+    });
+    return json(res, 403, { success: false, message: 'Email verification has not completed yet.' });
+  }
+
+  const email = normalizeEmail(authUser.email);
   const now = new Date().toISOString();
   const { data: existing, error: lookupError } = await admin.from('waitlist').select('*').eq('email', email).maybeSingle();
   if (lookupError) {
     throw lookupError;
+  }
+
+  if (!existing) {
+    console.warn('[WAITLIST] No waitlist row matched verified Supabase user:', {
+      userId: authUser.id,
+      email: maskEmail(email),
+    });
+    return json(res, 404, {
+      success: false,
+      message: 'No waitlist registration matched this verified email.',
+    });
   }
 
   if (existing?.status === 'verified') {
@@ -441,37 +469,47 @@ async function handleVerify(req, res, admin) {
       email,
       spot,
       verifiedAt: existing.verified_at,
-      message: "You're already on the MemShift waitlist.",
+      message: "Email verified! You're officially on the MemShift waitlist.",
       verifiedCount: stats.verifiedCount,
       stats,
     });
   }
 
-  const nextStatus = 'verified';
-  const upsertPayload = {
-    email,
-    status: nextStatus,
-    created_at: existing?.created_at || now,
-    verified_at: now,
-    last_verification_sent_at: existing?.last_verification_sent_at || now,
-    resend_count: existing?.resend_count || 0,
-  };
+  const { data: verifiedRow, error: updateError } = await admin
+    .from('waitlist')
+    .update({
+      status: 'verified',
+      verified_at: now,
+    })
+    .eq('email', email)
+    .select('*')
+    .maybeSingle();
 
-  const { error: upsertError } = await admin.from('waitlist').upsert(upsertPayload, { onConflict: 'email' });
-  if (upsertError) {
-    throw upsertError;
+  if (updateError) {
+    throw updateError;
+  }
+
+  if (!verifiedRow) {
+    console.warn('[WAITLIST] Verified update matched no waitlist row:', {
+      userId: authUser.id,
+      email: maskEmail(email),
+    });
+    return json(res, 404, {
+      success: false,
+      message: 'No waitlist registration matched this verified email.',
+    });
   }
 
   const stats = await fetchVerifiedStats(admin);
-  const spot = stats.latestSpot;
+  const spot = (await fetchVerifiedSpot(admin, email)) || stats.latestSpot;
 
   return json(res, 200, {
     success: true,
     status: 'verified',
     email,
     spot,
-    verifiedAt: now,
-    message: "You're already on the MemShift waitlist.",
+    verifiedAt: verifiedRow.verified_at || now,
+    message: "Email verified! You're officially on the MemShift waitlist.",
     verifiedCount: stats.verifiedCount,
     stats,
   });
