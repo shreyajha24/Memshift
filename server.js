@@ -2,7 +2,6 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { handleWaitlistApi } from './server/waitlistRuntime.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,11 +22,6 @@ const server = http.createServer((req, res) => {
 
   const url = req.url || '';
 
-  if (url.startsWith('/api/waitlist')) {
-    void handleWaitlistApi(req, res);
-    return;
-  }
-
   const filePath = path.join(DIST_DIR, url === '/' ? 'index.html' : url);
   const resolvedPath = fs.existsSync(filePath) ? filePath : path.join(DIST_DIR, 'index.html');
 
@@ -41,6 +35,7 @@ const server = http.createServer((req, res) => {
       '.png': 'image/png',
       '.jpg': 'image/jpeg',
       '.svg': 'image/svg+xml',
+      '.zip': 'application/zip',
     };
     res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
     fs.createReadStream(resolvedPath).pipe(res);
@@ -54,4 +49,3 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`MemShift server running at http://localhost:${PORT}`);
 });
-

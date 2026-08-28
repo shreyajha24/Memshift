@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Compass, Video, FileText, Share2, Sparkles, ExternalLink, CheckCircle2, ArrowRight, ShieldCheck } from 'lucide-react';
 import { mockOriginItems } from '../data/mockData';
+import { trackBetaDownload } from '../lib/analytics';
 
 export const OriginFinder: React.FC = () => {
   const [selectedOriginId, setSelectedOriginId] = useState<string>('origin-oauth');
@@ -94,7 +95,9 @@ export const OriginFinder: React.FC = () => {
               </div>
 
               <a
-                href="#waitlist"
+                href="/downloads/MemShift-Beta-v1.0.0.zip"
+                download
+                onClick={() => trackBetaDownload('origin_finder')}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 text-xs font-bold font-mono transition-all shadow-sm"
               >
                 <span>Open source</span>

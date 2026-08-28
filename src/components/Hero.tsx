@@ -1,14 +1,13 @@
 import React from 'react';
 import { MemoryVisualizer } from './MemoryVisualizer';
-import { Countdown } from './Countdown';
-import { ArrowDown, Sparkles, ShieldCheck, Zap, Calendar } from 'lucide-react';
+import { ArrowDown, Sparkles, ShieldCheck, Zap, Download } from 'lucide-react';
+import { trackBetaDownload } from '../lib/analytics';
 
 interface HeroProps {
-  onJoinWaitlist: () => void;
   onExplore: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onJoinWaitlist, onExplore }) => {
+export const Hero: React.FC<HeroProps> = ({ onExplore }) => {
   return (
     <section className="relative pt-28 pb-16 sm:pt-36 sm:pb-24 overflow-hidden">
       {/* Background glow and subtle dot grid */}
@@ -19,16 +18,14 @@ export const Hero: React.FC<HeroProps> = ({ onJoinWaitlist, onExplore }) => {
         {/* Top Text Content */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
           
-          {/* Top Row Badges: MemShift Status + Real Time Countdown Badge */}
+          {/* Product status */}
           <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-xs font-mono tracking-widest uppercase shadow-[0_0_15px_rgba(6,182,212,0.15)]">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-ping" />
-              <span>MEMSHIFT</span>
+              <span>PRIVATE BETA IS LIVE</span>
               <span className="text-slate-400 dark:text-slate-600">/</span>
-              <span className="text-slate-500 dark:text-slate-400">0.1 PRIVATE PREVIEW</span>
+              <span className="text-slate-500 dark:text-slate-400">CHROME EXTENSION</span>
             </div>
-
-            <Countdown variant="compact" />
           </div>
 
           {/* Main Headline */}
@@ -41,18 +38,20 @@ export const Hero: React.FC<HeroProps> = ({ onJoinWaitlist, onExplore }) => {
 
           {/* Extended Supporting Explanation */}
           <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-8">
-            You see hundreds of useful things online. MemShift helps you remember what they were, how they connect, and where you found them.
+            You see hundreds of useful things online. MemShift helps you remember what they were, how they connect, and where you found them. Try the Chrome beta today.
           </p>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
-            <button
-              onClick={onJoinWaitlist}
+            <a
+              href="/downloads/MemShift-Beta-v1.0.0.zip"
+              download
+              onClick={() => trackBetaDownload('hero')}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm text-slate-900 bg-cyan-400 hover:bg-cyan-300 active:scale-[0.99] transition-all shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:shadow-[0_0_35px_rgba(6,182,212,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
-              <Sparkles className="w-4 h-4 text-slate-900" />
-              <span>Join the Waitlist</span>
-            </button>
+              <Download className="w-4 h-4 text-slate-900" />
+              <span>Try MemShift Beta</span>
+            </a>
 
             <button
               onClick={onExplore}

@@ -6,10 +6,10 @@ declare global {
   }
 }
 
-export function trackWaitlistSignup() {
+export function trackBetaDownload(source: string) {
   if (typeof window !== 'undefined') {
-    window.gtag?.('event', 'waitlist_signup', {
-      source: 'website',
+    window.gtag?.('event', 'beta_download', {
+      source,
     });
   }
 }

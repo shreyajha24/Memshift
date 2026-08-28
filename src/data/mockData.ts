@@ -382,7 +382,7 @@ export const mockFAQs: FAQItem[] = [
   },
   {
     id: 'faq-6',
-    question: 'When will I get access?',
-    answer: 'We are rolling out early access in batches to our waitlist members. Join the waitlist with your email to claim your spot in Cohort 01.'
+    question: 'How can I try the beta?',
+    answer: 'Download the MemShift Chrome beta ZIP, extract it, open chrome://extensions, enable Developer mode, and choose Load unpacked. Select the extracted folder containing manifest.json.'
   }
 ];

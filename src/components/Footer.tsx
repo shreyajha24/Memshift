@@ -1,5 +1,6 @@
 import React from 'react';
-import { Sparkles, ArrowUp } from 'lucide-react';
+import { ArrowUp, Download } from 'lucide-react';
+import { trackBetaDownload } from '../lib/analytics';
 
 export const Footer: React.FC = () => {
   const scrollToTop = () => {
@@ -63,12 +64,14 @@ export const Footer: React.FC = () => {
             >
               FAQ
             </button>
-            <button
-              onClick={() => scrollToSection('waitlist')}
-              className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            <a
+              href="/downloads/MemShift-Beta-v1.0.0.zip"
+              download
+              onClick={() => trackBetaDownload('footer')}
+              className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 inline-flex items-center gap-1.5"
             >
-              Waitlist
-            </button>
+              <Download className="w-3.5 h-3.5" /> Try beta
+            </a>
             <a
               href="/privacy"
               className="hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"

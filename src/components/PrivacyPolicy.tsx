@@ -4,15 +4,14 @@ const sections = [
   {
     title: 'Information MemShift may collect',
     paragraphs: [
-      'MemShift may collect information you choose to provide, such as your email address when you join the waitlist or submit feedback. We may also receive basic technical information needed to operate and protect the website, such as browser, device, and request information.',
+      'MemShift may collect information you choose to provide, such as feedback. We may also receive basic technical information needed to operate and protect the website, such as browser, device, and request information.',
       'If you use a future MemShift account or product, we may handle account details and the content or sources you choose to connect. We will explain the relevant controls before those features are introduced.',
     ],
   },
   {
     title: 'How we use information',
     paragraphs: [
-      'Waitlist information is used to send verification messages, maintain your waitlist registration, provide your position or status, and communicate about MemShift access. Feedback is used to understand requests and improve the product.',
-      'We do not use your waitlist email for unrelated purposes. We do not sell personal information.',
+      'Feedback is used to understand requests and improve the product. We do not sell personal information.',
     ],
   },
   {
@@ -30,13 +29,13 @@ const sections = [
   {
     title: 'Third-party services',
     paragraphs: [
-      'The website uses third-party services to support its operation, including Supabase for waitlist-related data and email verification, Google Analytics for website analytics, Google Tag infrastructure to deliver the analytics tag, and Google Fonts for typography. These services process information according to their own terms and privacy policies.',
+      'The website uses third-party services to support its operation, including Google Analytics for website analytics, Google Tag infrastructure to deliver the analytics tag, and Google Fonts for typography. These services process information according to their own terms and privacy policies.',
     ],
   },
   {
     title: 'Data retention',
     paragraphs: [
-      'We retain information only for as long as it is reasonably needed for the purpose it was collected, such as maintaining a waitlist registration, completing verification, providing the service, resolving disputes, or meeting legal and security needs. Retention periods may vary by type of information and feature.',
+      'We retain information only for as long as it is reasonably needed for the purpose it was collected, such as providing the service, resolving disputes, or meeting legal and security needs. Retention periods may vary by type of information and feature.',
     ],
   },
   {

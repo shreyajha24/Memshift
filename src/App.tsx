@@ -14,7 +14,7 @@ import { MemoryDecay } from './components/MemoryDecay';
 import { PrivacySection } from './components/PrivacySection';
 import { Comparison } from './components/Comparison';
 import { FAQ } from './components/FAQ';
-import { Waitlist } from './components/Waitlist';
+import { InstallBeta } from './components/InstallBeta';
 import { Footer } from './components/Footer';
 import { CommandPalette } from './components/CommandPalette';
 import { PrivacyPolicy } from './components/PrivacyPolicy';
@@ -34,13 +34,6 @@ export function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  const scrollToWaitlist = () => {
-    const el = document.getElementById('waitlist');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   const scrollToExplore = () => {
     const el = document.getElementById('product');
@@ -62,9 +55,10 @@ export function App() {
           ) : <>
             {/* Section 1: Hero & Interactive 3D Memory World */}
             <Hero
-              onJoinWaitlist={scrollToWaitlist}
               onExplore={scrollToExplore}
             />
+
+          <InstallBeta />
 
           {/* Section 2: "You don't forget the idea. You forget where you found it." */}
           <ProblemSection />
@@ -102,8 +96,6 @@ export function App() {
           {/* Section 13: FAQ Accordion */}
           <FAQ />
 
-            {/* Section 14: Real Waitlist CTA with live queue and spot pass */}
-            <Waitlist />
           </>}
         </main>
 

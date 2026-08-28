@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ThemeToggle } from './ThemeToggle';
-import { Menu, X, Sparkles, Command } from 'lucide-react';
-import { Countdown } from './Countdown';
+import { Menu, X, Sparkles, Command, Download } from 'lucide-react';
+import { trackBetaDownload } from '../lib/analytics';
 
 interface NavbarProps {
   onOpenSearch?: () => void;
@@ -66,10 +66,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
             </div>
           </a>
 
-          {/* Mini launch ticker in header for desktop */}
-          <div className="hidden lg:block">
-            <Countdown variant="compact" />
-          </div>
         </div>
 
         {/* Desktop Nav Links */}
@@ -117,15 +113,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
 
           <ThemeToggle />
 
-          <button
-            onClick={() => scrollToSection('waitlist')}
+          <a
+            href="/downloads/MemShift-Beta-v1.0.0.zip"
+            download
+            onClick={() => trackBetaDownload('navbar')}
             className="relative group overflow-hidden rounded-lg px-4 py-2 text-xs font-semibold text-slate-900 dark:text-black bg-cyan-400 hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
           >
             <span className="relative z-10 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-slate-900" />
-              Join Waitlist
+              <Download className="w-3.5 h-3.5 text-slate-900" />
+              Try MemShift
             </span>
-          </button>
+          </a>
         </div>
 
         {/* Mobile menu toggle button */}
@@ -145,10 +143,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden px-4 pt-3 pb-6 bg-white/95 dark:bg-memshift-bg-dark/95 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 animate-in slide-in-from-top-2 duration-200 shadow-xl">
-          <div className="mb-3">
-            <Countdown variant="compact" className="w-full justify-center" />
-          </div>
-
           <div className="flex flex-col space-y-2 pt-2">
             <button
               onClick={() => scrollToSection('product')}
@@ -187,12 +181,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               </button>
             )}
             <div className="pt-2">
-              <button
-                onClick={() => scrollToSection('waitlist')}
+              <a
+                href="/downloads/MemShift-Beta-v1.0.0.zip"
+                download
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  trackBetaDownload('mobile_navbar');
+                }}
                 className="w-full text-center py-3 rounded-lg text-sm font-semibold text-slate-900 bg-cyan-400 hover:bg-cyan-300 transition-colors shadow-md"
               >
-                Join the waitlist
-              </button>
+                Try MemShift Beta
+              </a>
             </div>
           </div>
         </div>
