@@ -1,6 +1,5 @@
 import React from 'react';
 import { Globe2, Download, FolderOpen, Settings2, Upload, Sparkles, Mail } from 'lucide-react';
-import { trackBetaDownload } from '../lib/analytics';
 
 const steps = [
   { number: '01', title: 'Download MemShift', description: 'Click Download MemShift Beta. The ZIP downloads to your computer.', icon: <Download className="w-5 h-5" /> },
@@ -8,7 +7,7 @@ const steps = [
   { number: '03', title: 'Open Chrome Extensions', description: 'Open Google Chrome, enter chrome://extensions in the address bar, and press Enter.', icon: <Globe2 className="w-5 h-5" /> },
   { number: '04', title: 'Enable Developer Mode', description: 'On the Chrome Extensions page, turn Developer mode ON in the top-right corner.', icon: <Settings2 className="w-5 h-5" /> },
   { number: '05', title: 'Load MemShift', description: 'Click Load unpacked and select the extracted extension folder that directly contains manifest.json.', icon: <Upload className="w-5 h-5" /> },
-  { number: '06', title: 'Start remembering', description: 'Pin MemShift from Chrome’s puzzle-piece Extensions menu, then open it and sign in or create an account if required.', icon: <Sparkles className="w-5 h-5" /> },
+  { number: '06', title: 'Start remembering', description: 'Pin MemShift from Chrome’s puzzle-piece Extensions menu, then open the extension and start using it.', icon: <Sparkles className="w-5 h-5" /> },
 ];
 
 const troubleshooting = [
@@ -21,7 +20,7 @@ const troubleshooting = [
 const downloadUrl = '/downloads/MemShift-Beta-v1.0.0.zip';
 
 export const InstallBeta: React.FC = () => (
-  <section id="install" className="relative py-24 sm:py-32 bg-slate-50/70 dark:bg-[#07080d]/70 border-y border-slate-200/80 dark:border-white/5 overflow-hidden">
+  <section id="installation" className="relative py-24 sm:py-32 bg-slate-50/70 dark:bg-[#07080d]/70 border-y border-slate-200/80 dark:border-white/5 overflow-hidden">
     <div className="absolute inset-0 bg-neural-grid pointer-events-none opacity-20" />
     <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto text-center mb-14">
@@ -70,10 +69,10 @@ export const InstallBeta: React.FC = () => (
         <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Ready to try MemShift?</h3>
       </div>
       <div className="mt-5 flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href={downloadUrl} download onClick={() => trackBetaDownload('install_section')} className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm text-slate-900 bg-cyan-400 hover:bg-cyan-300 transition-all shadow-[0_0_25px_rgba(6,182,212,0.3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
+        <a href={downloadUrl} id="download-beta-extension-secondary" download className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm text-slate-900 bg-cyan-400 hover:bg-cyan-300 transition-all shadow-[0_0_25px_rgba(6,182,212,0.3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
           <Download className="w-4 h-4" /> Download MemShift Beta
         </a>
-        <a href="mailto:feedback@memshift.app?subject=MemShift%20beta%20feedback" className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-cyan-500 dark:hover:text-cyan-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-lg px-3 py-2">
+        <a href="mailto:memshift.app@gmail.com?subject=MemShift%20Beta%20Feedback" className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-cyan-500 dark:hover:text-cyan-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-lg px-3 py-2">
           <Mail className="w-4 h-4" /> Found a bug or have feedback?
         </a>
       </div>

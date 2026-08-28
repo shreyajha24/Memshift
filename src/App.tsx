@@ -36,7 +36,7 @@ export function App() {
   }, []);
 
   const scrollToExplore = () => {
-    const el = document.getElementById('product');
+    const el = document.getElementById('installation');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }

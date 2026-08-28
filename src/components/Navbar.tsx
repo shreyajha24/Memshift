@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { Menu, X, Sparkles, Command, Download } from 'lucide-react';
-import { trackBetaDownload } from '../lib/analytics';
 
 interface NavbarProps {
   onOpenSearch?: () => void;
@@ -116,7 +115,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
           <a
             href="/downloads/MemShift-Beta-v1.0.0.zip"
             download
-            onClick={() => trackBetaDownload('navbar')}
             className="relative group overflow-hidden rounded-lg px-4 py-2 text-xs font-semibold text-slate-900 dark:text-black bg-cyan-400 hover:bg-cyan-300 transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
           >
             <span className="relative z-10 flex items-center gap-1.5">
@@ -186,7 +184,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                 download
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  trackBetaDownload('mobile_navbar');
                 }}
                 className="w-full text-center py-3 rounded-lg text-sm font-semibold text-slate-900 bg-cyan-400 hover:bg-cyan-300 transition-colors shadow-md"
               >

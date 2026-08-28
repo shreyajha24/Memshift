@@ -1,7 +1,6 @@
 import React from 'react';
 import { MemoryVisualizer } from './MemoryVisualizer';
 import { ArrowDown, Sparkles, ShieldCheck, Zap, Download } from 'lucide-react';
-import { trackBetaDownload } from '../lib/analytics';
 
 interface HeroProps {
   onExplore: () => void;
@@ -45,8 +44,8 @@ export const Hero: React.FC<HeroProps> = ({ onExplore }) => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8">
             <a
               href="/downloads/MemShift-Beta-v1.0.0.zip"
+              id="download-beta-extension"
               download
-              onClick={() => trackBetaDownload('hero')}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm text-slate-900 bg-cyan-400 hover:bg-cyan-300 active:scale-[0.99] transition-all shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:shadow-[0_0_35px_rgba(6,182,212,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
               <Download className="w-4 h-4 text-slate-900" />

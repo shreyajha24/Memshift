@@ -1,6 +1,5 @@
 import React from 'react';
 import { ArrowUp, Download } from 'lucide-react';
-import { trackBetaDownload } from '../lib/analytics';
 
 export const Footer: React.FC = () => {
   const scrollToTop = () => {
@@ -67,7 +66,6 @@ export const Footer: React.FC = () => {
             <a
               href="/downloads/MemShift-Beta-v1.0.0.zip"
               download
-              onClick={() => trackBetaDownload('footer')}
               className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 inline-flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5" /> Try beta
